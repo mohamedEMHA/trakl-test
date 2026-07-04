@@ -1030,3 +1030,433 @@
 [React Native CI/CD (Android Release)/Build Android Release (release-aab)]   | Accept? (y/N): All SDK package licenses accepted
 [React Native CI/CD (Android Release)/Build Android Release (release-aab)]   | 
 [React Native CI/CD (Android Release)/Build Android Release (release-aab)]   | [command]/root/.android/sdk/cmdline-tools/16.0/bin/sdkmanager tools
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   | Loading package information...                                                  
+Loading local repository...                                                     
+[                                       ] 3% Loading local repository...        
+[                                       ] 3% Fetch remote repository...         
+[=                                      ] 3% Fetch remote repository...         
+[=                                      ] 4% Fetch remote repository...         
+[=                                      ] 5% Fetch remote repository...         
+[==                                     ] 5% Fetch remote repository...         
+[==                                     ] 6% Fetch remote repository...         
+[==                                     ] 7% Fetch remote repository...         
+[==                                     ] 7% Computing updates...               
+[===                                    ] 8% Computing updates...               
+[===                                    ] 10% Computing updates...              
+[===                                    ] 10% Installing Android Emulator       
+[===                                    ] 10% Downloading emulator-linux_x64-155
+[====                                   ] 10% Downloading emulator-linux_x64-155
+[====                                   ] 11% Downloading emulator-linux_x64-155
+[====                                   ] 12% Downloading emulator-linux_x64-155
+[=====                                  ] 13% Downloading emulator-linux_x64-155
+[=====                                  ] 14% Downloading emulator-linux_x64-155
+[=====                                  ] 15% Downloading emulator-linux_x64-155
+[======                                 ] 15% Downloading emulator-linux_x64-155
+[======                                 ] 16% Downloading emulator-linux_x64-155
+[======                                 ] 17% Downloading emulator-linux_x64-155
+[=======                                ] 18% Downloading emulator-linux_x64-155
+[=======                                ] 19% Downloading emulator-linux_x64-155
+[=======                                ] 20% Downloading emulator-linux_x64-155
+[========                               ] 20% Downloading emulator-linux_x64-155
+[========                               ] 21% Downloading emulator-linux_x64-155
+[========                               ] 21% Unzipping...                      
+[========                               ] 21% Unzipping... emulator/            
+[========                               ] 21% Unzipping... emulator/resources/  
+[========                               ] 21% Unzipping... emulator/qsn         
+[========                               ] 21% Unzipping... emulator/emulator    
+[========                               ] 21% Unzipping... emulator/netsimd     
+[========                               ] 22% Unzipping... emulator/netsimd     
+[========                               ] 22% Unzipping... emulator/bin64/      
+[========                               ] 22% Unzipping... emulator/qemu/       
+[========                               ] 22% Unzipping... emulator/NOTICE.txt  
+[========                               ] 22% Unzipping... emulator/crashpad_han
+[========                               ] 22% Unzipping... emulator/source.prope
+[========                               ] 22% Unzipping... emulator/nimble_bridg
+[========                               ] 22% Unzipping... emulator/LICENSE     
+[========                               ] 22% Unzipping... emulator/lib/        
+[========                               ] 22% Unzipping... emulator/qemu-img    
+[========                               ] 22% Unzipping... emulator/include/    
+[========                               ] 22% Unzipping... emulator/NOTICE.csv  
+[========                               ] 22% Unzipping... emulator/lib64/      
+[========                               ] 22% Unzipping... emulator/emulator-che
+[========                               ] 22% Unzipping... emulator/crashreport 
+[========                               ] 22% Unzipping... emulator/mksdcard    
+[========                               ] 22% Unzipping... emulator/resources/To
+[========                               ] 22% Unzipping... emulator/resources/de
+[========                               ] 22% Unzipping... emulator/resources/To
+[========                               ] 22% Unzipping... emulator/resources/ma
+[========                               ] 22% Unzipping... emulator/resources/de
+[========                               ] 22% Unzipping... emulator/resources/sk
+[========                               ] 22% Unzipping... emulator/resources/de
+[========                               ] 22% Unzipping... emulator/resources/ma
+[========                               ] 22% Unzipping... emulator/resources/po
+[========                               ] 22% Unzipping... emulator/resources/ma
+[========                               ] 22% Unzipping... emulator/resources/sk
+[========                               ] 22% Unzipping... emulator/resources/ma
+[========                               ] 22% Unzipping... emulator/bin64/e2fsck
+[========                               ] 22% Unzipping... emulator/bin64/fsck.e
+[========                               ] 22% Unzipping... emulator/bin64/tune2f
+[========                               ] 22% Unzipping... emulator/bin64/resize
+[========                               ] 22% Unzipping... emulator/bin64/mkfs.e
+[========                               ] 22% Unzipping... emulator/qemu/linux-x
+[=========                              ] 23% Unzipping... emulator/qemu/linux-x
+[=========                              ] 24% Unzipping... emulator/qemu/linux-x
+[=========                              ] 25% Unzipping... emulator/qemu/linux-x
+[==========                             ] 25% Unzipping... emulator/qemu/linux-x
+[==========                             ] 25% Unzipping... emulator/lib/emulator
+[==========                             ] 25% Unzipping... emulator/lib/rtc_serv
+[==========                             ] 25% Unzipping... emulator/lib/advanced
+[==========                             ] 25% Unzipping... emulator/lib/cmake/  
+[==========                             ] 25% Unzipping... emulator/lib/emulator
+[==========                             ] 25% Unzipping... emulator/lib/control_
+[==========                             ] 25% Unzipping... emulator/lib/emulated
+[==========                             ] 25% Unzipping... emulator/lib/rtc_serv
+[==========                             ] 25% Unzipping... emulator/lib/emu-orig
+[==========                             ] 25% Unzipping... emulator/lib/hardware
+[==========                             ] 25% Unzipping... emulator/lib/pkgconfi
+[==========                             ] 25% Unzipping... emulator/lib/pc-bios/
+[==========                             ] 25% Unzipping... emulator/lib/snapshot
+[==========                             ] 25% Unzipping... emulator/lib/adb_serv
+[==========                             ] 25% Unzipping... emulator/lib/hostapd.
+[==========                             ] 25% Unzipping... emulator/lib/grpc_end
+[==========                             ] 25% Unzipping... emulator/lib/ca-bundl
+[==========                             ] 25% Unzipping... emulator/lib/ui_contr
+[==========                             ] 25% Unzipping... emulator/lib/snapshot
+[==========                             ] 25% Unzipping... emulator/lib/ice_conf
+[==========                             ] 25% Unzipping... emulator/lib/libflatb
+[==========                             ] 26% Unzipping... emulator/lib/libflatb
+[==========                             ] 26% Unzipping... emulator/lib/emulator
+[==========                             ] 26% Unzipping... emulator/lib/waterfal
+[==========                             ] 26% Unzipping... emulator/lib/emulated
+[==========                             ] 26% Unzipping... emulator/lib/cmake/fl
+[==========                             ] 26% Unzipping... emulator/lib/pkgconfi
+[==========                             ] 26% Unzipping... emulator/lib/pc-bios/
+[==========                             ] 26% Unzipping... emulator/include/flat
+[==========                             ] 26% Unzipping... emulator/lib64/libgli
+[==========                             ] 26% Unzipping... emulator/lib64/libpro
+[==========                             ] 26% Unzipping... emulator/lib64/qt/   
+[==========                             ] 26% Unzipping... emulator/lib64/liband
+[==========                             ] 26% Unzipping... emulator/lib64/libgfx
+[==========                             ] 26% Unzipping... emulator/lib64/gles_l
+[==========                             ] 26% Unzipping... emulator/lib64/liband
+[==========                             ] 26% Unzipping... emulator/lib64/vulkan
+[==========                             ] 26% Unzipping... emulator/lib64/gles_s
+[==========                             ] 26% Unzipping... emulator/lib64/libemu
+[==========                             ] 26% Unzipping... emulator/lib64/libpro
+[==========                             ] 26% Unzipping... emulator/lib64/liband
+[==========                             ] 26% Unzipping... emulator/lib64/libtcm
+[==========                             ] 26% Unzipping... emulator/lib64/libima
+[==========                             ] 26% Unzipping... emulator/lib64/libc++
+[==========                             ] 26% Unzipping... emulator/lib64/liband
+[==========                             ] 26% Unzipping... emulator/lib64/libabs
+[==========                             ] 26% Unzipping... emulator/lib64/gles_a
+[==========                             ] 26% Unzipping... emulator/lib64/libsha
+[==========                             ] 26% Unzipping... emulator/lib64/libc++
+[==========                             ] 26% Unzipping... emulator/lib64/qt/res
+[==========                             ] 26% Unzipping... emulator/lib64/qt/lib
+[==========                             ] 26% Unzipping... emulator/lib64/qt/tra
+[==========                             ] 26% Unzipping... emulator/lib64/qt/plu
+[==========                             ] 26% Unzipping... emulator/lib64/qt/res
+[==========                             ] 27% Unzipping... emulator/lib64/qt/res
+[==========                             ] 27% Unzipping... emulator/lib64/qt/lib
+[===========                            ] 28% Unzipping... emulator/lib64/qt/lib
+[===========                            ] 29% Unzipping... emulator/lib64/qt/lib
+[===========                            ] 30% Unzipping... emulator/lib64/qt/lib
+[============                           ] 30% Unzipping... emulator/lib64/qt/lib
+[============                           ] 30% Unzipping... emulator/lib64/qt/tra
+[============                           ] 31% Unzipping... emulator/lib64/qt/tra
+[============                           ] 31% Unzipping... emulator/lib64/qt/plu
+[============                           ] 31% Unzipping... emulator/lib64/gles_l
+[============                           ] 31% Unzipping... emulator/lib64/vulkan
+[============                           ] 32% Unzipping... emulator/lib64/vulkan
+[============                           ] 32% Unzipping... emulator/lib64/gles_s
+[============                           ] 32% Unzipping... emulator/lib64/gles_a
+[=============                          ] 33% Unzipping... emulator/lib64/gles_a
+[=====================                  ] 55% Unzipping... emulator/lib64/gles_a
+[=====================                  ] 55% Installing Android SDK Tools emula
+[=====================                  ] 55% Downloading sdk-tools-linux-433379
+[======================                 ] 55% Downloading sdk-tools-linux-433379
+[======================                 ] 56% Downloading sdk-tools-linux-433379
+[======================                 ] 57% Downloading sdk-tools-linux-433379
+[=======================                ] 58% Downloading sdk-tools-linux-433379
+[=======================                ] 59% Downloading sdk-tools-linux-433379
+[=======================                ] 60% Downloading sdk-tools-linux-433379
+[========================               ] 60% Downloading sdk-tools-linux-433379
+[========================               ] 61% Downloading sdk-tools-linux-433379
+[========================               ] 62% Downloading sdk-tools-linux-433379
+[=========================              ] 63% Downloading sdk-tools-linux-433379
+[=========================              ] 64% Downloading sdk-tools-linux-433379
+[=========================              ] 65% Downloading sdk-tools-linux-433379
+[==========================             ] 65% Downloading sdk-tools-linux-433379
+[==========================             ] 66% Downloading sdk-tools-linux-433379
+[==========================             ] 66% Unzipping... emulator/lib64/gles_a
+[==========================             ] 66% Unzipping... tools/               
+[==========================             ] 66% Unzipping... tools/proguard/      
+[==========================             ] 66% Unzipping... tools/proguard/licens
+[==========================             ] 66% Unzipping... tools/proguard/lib/  
+[==========================             ] 66% Unzipping... tools/proguard/lib/pr
+[==========================             ] 66% Unzipping... tools/proguard/lib/re
+[==========================             ] 66% Unzipping... tools/proguard/lib/pr
+[==========================             ] 66% Unzipping... tools/proguard/ant/  
+[==========================             ] 66% Unzipping... tools/proguard/ant/ta
+[==========================             ] 66% Unzipping... tools/proguard/docs/ 
+[==========================             ] 66% Unzipping... tools/proguard/docs/f
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/d
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/F
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/l
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/d
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/r
+[==========================             ] 66% Unzipping... tools/proguard/docs/d
+[==========================             ] 66% Unzipping... tools/proguard/docs/t
+[==========================             ] 66% Unzipping... tools/proguard/docs/f
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/t
+[==========================             ] 66% Unzipping... tools/proguard/docs/i
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/m
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/q
+[==========================             ] 66% Unzipping... tools/proguard/docs/G
+[==========================             ] 66% Unzipping... tools/proguard/docs/t
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/m
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/G
+[==========================             ] 66% Unzipping... tools/proguard/docs/c
+[==========================             ] 66% Unzipping... tools/proguard/docs/a
+[==========================             ] 66% Unzipping... tools/proguard/docs/s
+[==========================             ] 66% Unzipping... tools/proguard/docs/d
+[==========================             ] 66% Unzipping... tools/proguard/exampl
+[==========================             ] 66% Unzipping... tools/proguard/bin/  
+[==========================             ] 66% Unzipping... tools/proguard/bin/pr
+[==========================             ] 66% Unzipping... tools/proguard/bin/re
+[==========================             ] 66% Unzipping... tools/proguard/README
+[==========================             ] 66% Unzipping... tools/proguard/progua
+[==========================             ] 66% Unzipping... tools/lib/           
+[==========================             ] 66% Unzipping... tools/lib/bcpkix-jdk1
+[==========================             ] 66% Unzipping... tools/lib/org-eclipse
+[==========================             ] 66% Unzipping... tools/lib/manifest-me
+[==========================             ] 66% Unzipping... tools/lib/jcommander-
+[==========================             ] 66% Unzipping... tools/lib/gson-2.3.ja
+[==========================             ] 66% Unzipping... tools/lib/ddms-26.0.0
+[==========================             ] 66% Unzipping... tools/lib/asm-tree-5.
+[==========================             ] 66% Unzipping... tools/lib/uast-26.0.0
+[==========================             ] 66% Unzipping... tools/lib/dexlib2-2.2
+[==========================             ] 67% Unzipping... tools/lib/dexlib2-2.2
+[==========================             ] 67% Unzipping... tools/lib/android.el 
+[==========================             ] 67% Unzipping... tools/lib/apkanalyzer
+[==========================             ] 67% Unzipping... tools/lib/guava-22.0.
+[==========================             ] 67% Unzipping... tools/lib/lint-api-26
+[==========================             ] 67% Unzipping... tools/lib/baksmali-2.
+[==========================             ] 67% Unzipping... tools/lib/shared.jar 
+[==========================             ] 67% Unzipping... tools/lib/jsr305-1.3.
+[==========================             ] 67% Unzipping... tools/lib/httpclient-
+[==========================             ] 67% Unzipping... tools/lib/ecj-4.6.1.j
+[==========================             ] 67% Unzipping... tools/lib/jobb-26.0.0
+[==========================             ] 67% Unzipping... tools/lib/jcommon-1.0
+[==========================             ] 67% Unzipping... tools/lib/kxml2-2.3.0
+[==========================             ] 67% Unzipping... tools/lib/jfreechart-
+[==========================             ] 67% Unzipping... tools/lib/common-26.0
+[==========================             ] 67% Unzipping... tools/lib/lint-checks
+[==========================             ] 67% Unzipping... tools/lib/kotlin-refl
+[==========================             ] 67% Unzipping... tools/lib/builder-mod
+[==========================             ] 67% Unzipping... tools/lib/sdklib-26.0
+[==========================             ] 67% Unzipping... tools/lib/layoutlib-a
+[==========================             ] 67% Unzipping... tools/lib/annotations
+[==========================             ] 67% Unzipping... tools/lib/fat32lib.ja
+[==========================             ] 67% Unzipping... tools/lib/jsr305-3.0.
+[==========================             ] 67% Unzipping... tools/lib/org-eclipse
+[==========================             ] 67% Unzipping... tools/lib/error_prone
+[==========================             ] 67% Unzipping... tools/lib/org-eclipse
+[==========================             ] 67% Unzipping... tools/lib/animal-snif
+[==========================             ] 67% Unzipping... tools/lib/asset-studi
+[===========================            ] 68% Unzipping... tools/lib/asset-studi
+[===========================            ] 68% Unzipping... tools/lib/repository-
+[===========================            ] 68% Unzipping... tools/lib/dvlib-26.0.
+[===========================            ] 68% Unzipping... tools/lib/jsilver-1.0
+[===========================            ] 68% Unzipping... tools/lib/asm-5.1.jar
+[===========================            ] 68% Unzipping... tools/lib/devices.xml
+[===========================            ] 68% Unzipping... tools/lib/asm-analysi
+[===========================            ] 68% Unzipping... tools/lib/hierarchyvi
+[===========================            ] 68% Unzipping... tools/lib/monkeyrunne
+[===========================            ] 68% Unzipping... tools/lib/uiautomator
+[===========================            ] 68% Unzipping... tools/lib/archquery-2
+[===========================            ] 68% Unzipping... tools/lib/chimpchat-2
+[===========================            ] 68% Unzipping... tools/lib/explainer.j
+[===========================            ] 68% Unzipping... tools/lib/ddmlib-26.0
+[===========================            ] 68% Unzipping... tools/lib/swtmenubar-
+[===========================            ] 68% Unzipping... tools/lib/osgi-4.0.0.
+[===========================            ] 68% Unzipping... tools/lib/x86_64/    
+[===========================            ] 68% Unzipping... tools/lib/x86_64/swt.
+[===========================            ] 68% Unzipping... tools/lib/monitor-x86
+[===========================            ] 69% Unzipping... tools/lib/monitor-x86
+[===========================            ] 70% Unzipping... tools/lib/monitor-x86
+[============================           ] 70% Unzipping... tools/lib/monitor-x86
+[============================           ] 71% Unzipping... tools/lib/monitor-x86
+[============================           ] 71% Unzipping... tools/lib/httpmime-4.
+[============================           ] 71% Unzipping... tools/lib/annotations
+[============================           ] 71% Unzipping... tools/lib/lint-26.0.0
+[============================           ] 71% Unzipping... tools/lib/apkanalyzer
+[============================           ] 71% Unzipping... tools/lib/binary-reso
+[============================           ] 71% Unzipping... tools/lib/jopt-simple
+[============================           ] 71% Unzipping... tools/lib/util-2.2.1.
+[============================           ] 71% Unzipping... tools/lib/ddmuilib-26
+[============================           ] 72% Unzipping... tools/lib/ddmuilib-26
+[============================           ] 72% Unzipping... tools/lib/sdk-common-
+[============================           ] 72% Unzipping... tools/lib/traceview-2
+[============================           ] 72% Unzipping... tools/lib/httpcore-4.
+[============================           ] 72% Unzipping... tools/lib/screenshot2
+[============================           ] 72% Unzipping... tools/lib/commons-cod
+[============================           ] 72% Unzipping... tools/lib/proguard-pr
+[============================           ] 72% Unzipping... tools/lib/jython-stan
+[=============================          ] 73% Unzipping... tools/lib/jython-stan
+[=============================          ] 73% Unzipping... tools/lib/annotations
+[=============================          ] 73% Unzipping... tools/lib/commons-log
+[=============================          ] 73% Unzipping... tools/lib/protobuf-ja
+[=============================          ] 73% Unzipping... tools/lib/fakeadbserv
+[=============================          ] 73% Unzipping... tools/lib/bcprov-jdk1
+[=============================          ] 73% Unzipping... tools/lib/x86/       
+[=============================          ] 73% Unzipping... tools/lib/x86/swt.jar
+[=============================          ] 73% Unzipping... tools/lib/kotlin-stdl
+[=============================          ] 73% Unzipping... tools/lib/commons-com
+[=============================          ] 73% Unzipping... tools/lib/lombok-ast-
+[=============================          ] 73% Unzipping... tools/lib/trove4j-201
+[=============================          ] 73% Unzipping... tools/lib/intellij-co
+[=============================          ] 74% Unzipping... tools/lib/intellij-co
+[=============================          ] 74% Unzipping... tools/lib/jimfs-1.1.j
+[=============================          ] 74% Unzipping... tools/lib/j2objc-anno
+[=============================          ] 74% Unzipping... tools/lib/jfreechart-
+[=============================          ] 74% Unzipping... tools/lib/monitor-x86
+[=============================          ] 75% Unzipping... tools/lib/monitor-x86
+[==============================         ] 75% Unzipping... tools/lib/monitor-x86
+[==============================         ] 76% Unzipping... tools/lib/monitor-x86
+[==============================         ] 77% Unzipping... tools/lib/monitor-x86
+[==============================         ] 77% Unzipping... tools/lib/generator.j
+[==============================         ] 77% Unzipping... tools/source.properti
+[==============================         ] 77% Unzipping... tools/bin/           
+[==============================         ] 77% Unzipping... tools/bin/avdmanager 
+[==============================         ] 77% Unzipping... tools/bin/jobb       
+[==============================         ] 77% Unzipping... tools/bin/uiautomator
+[==============================         ] 77% Unzipping... tools/bin/apkanalyzer
+[==============================         ] 77% Unzipping... tools/bin/monkeyrunne
+[==============================         ] 77% Unzipping... tools/bin/archquery  
+[==============================         ] 77% Unzipping... tools/bin/sdkmanager 
+[==============================         ] 77% Unzipping... tools/bin/lint       
+[==============================         ] 77% Unzipping... tools/bin/screenshot2
+[==============================         ] 77% Unzipping... tools/NOTICE.txt     
+[==============================         ] 77% Unzipping... tools/emulator       
+[==============================         ] 77% Unzipping... tools/emulator-check 
+[==============================         ] 77% Unzipping... tools/monitor        
+[==============================         ] 77% Unzipping... tools/android        
+[==============================         ] 77% Unzipping... tools/mksdcard       
+[==============================         ] 77% Unzipping... tools/support/       
+[==============================         ] 77% Unzipping... tools/support/typos-d
+[==============================         ] 77% Unzipping... tools/support/typos-e
+[==============================         ] 77% Unzipping... tools/support/annotat
+[==============================         ] 77% Unzipping... tools/support/typos-e
+[==============================         ] 77% Unzipping... tools/support/typos-t
+[==============================         ] 77% Unzipping... tools/support/typos-p
+[==============================         ] 77% Unzipping... tools/support/typos-i
+[==============================         ] 77% Unzipping... tools/support/typos-n
+[==============================         ] 77% Unzipping... tools/support/typos-h
+[==============================         ] 78% Unzipping... tools/support/typos-h
+[=======================================] 100% Unzipping... tools/support/typos-
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   | 
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   | [command]/root/.android/sdk/cmdline-tools/16.0/bin/sdkmanager platform-tools
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   | Loading package information...                                                  
+Loading local repository...                                                     
+[                                       ] 3% Loading local repository...        
+[                                       ] 3% Fetch remote repository...         
+[=                                      ] 3% Fetch remote repository...         
+[=                                      ] 4% Fetch remote repository...         
+[=                                      ] 5% Fetch remote repository...         
+[==                                     ] 5% Fetch remote repository...         
+[==                                     ] 6% Fetch remote repository...         
+[==                                     ] 7% Fetch remote repository...         
+[==                                     ] 7% Computing updates...               
+[===                                    ] 8% Computing updates...               
+[===                                    ] 10% Computing updates...              
+[===                                    ] 10% Installing Android SDK Platform-To
+[===                                    ] 10% Downloading platform-tools_r37.0.0
+[====                                   ] 10% Downloading platform-tools_r37.0.0
+[====                                   ] 11% Downloading platform-tools_r37.0.0
+[====                                   ] 12% Downloading platform-tools_r37.0.0
+[=====                                  ] 13% Downloading platform-tools_r37.0.0
+[=====                                  ] 14% Downloading platform-tools_r37.0.0
+[=====                                  ] 15% Downloading platform-tools_r37.0.0
+[======                                 ] 15% Downloading platform-tools_r37.0.0
+[======                                 ] 16% Downloading platform-tools_r37.0.0
+[======                                 ] 17% Downloading platform-tools_r37.0.0
+[=======                                ] 18% Downloading platform-tools_r37.0.0
+[=======                                ] 19% Downloading platform-tools_r37.0.0
+[=======                                ] 20% Downloading platform-tools_r37.0.0
+[========                               ] 20% Downloading platform-tools_r37.0.0
+[========                               ] 21% Downloading platform-tools_r37.0.0
+[========                               ] 22% Downloading platform-tools_r37.0.0
+[=========                              ] 23% Downloading platform-tools_r37.0.0
+[=========                              ] 24% Downloading platform-tools_r37.0.0
+[=========                              ] 25% Downloading platform-tools_r37.0.0
+[==========                             ] 25% Downloading platform-tools_r37.0.0
+[==========                             ] 26% Downloading platform-tools_r37.0.0
+[==========                             ] 27% Downloading platform-tools_r37.0.0
+[===========                            ] 28% Downloading platform-tools_r37.0.0
+[===========                            ] 29% Downloading platform-tools_r37.0.0
+[===========                            ] 30% Downloading platform-tools_r37.0.0
+[============                           ] 30% Downloading platform-tools_r37.0.0
+[============                           ] 31% Downloading platform-tools_r37.0.0
+[============                           ] 32% Downloading platform-tools_r37.0.0
+[============                           ] 33% Downloading platform-tools_r37.0.0
+[============                           ] 33% Unzipping...                      
+[============                           ] 33% Unzipping... platform-tools/NOTICE
+[=============                          ] 33% Unzipping... platform-tools/NOTICE
+[=============                          ] 33% Unzipping... platform-tools/adb   
+[=============                          ] 34% Unzipping... platform-tools/adb   
+[=============                          ] 35% Unzipping... platform-tools/adb   
+[==============                         ] 35% Unzipping... platform-tools/adb   
+[==============                         ] 36% Unzipping... platform-tools/adb   
+[==============                         ] 37% Unzipping... platform-tools/adb   
+[===============                        ] 38% Unzipping... platform-tools/adb   
+[===============                        ] 39% Unzipping... platform-tools/adb   
+[===============                        ] 40% Unzipping... platform-tools/adb   
+[================                       ] 40% Unzipping... platform-tools/adb   
+[================                       ] 41% Unzipping... platform-tools/adb   
+[================                       ] 42% Unzipping... platform-tools/adb   
+[=================                      ] 43% Unzipping... platform-tools/adb   
+[=================                      ] 44% Unzipping... platform-tools/adb   
+[=================                      ] 45% Unzipping... platform-tools/adb   
+[=================                      ] 45% Unzipping... platform-tools/etc1to
+[==================                     ] 45% Unzipping... platform-tools/etc1to
+[==================                     ] 45% Unzipping... platform-tools/fastbo
+[==================                     ] 46% Unzipping... platform-tools/fastbo
+[==================                     ] 47% Unzipping... platform-tools/fastbo
+[===================                    ] 48% Unzipping... platform-tools/fastbo
+[===================                    ] 48% Unzipping... platform-tools/hprof-
+[===================                    ] 48% Unzipping... platform-tools/lib64/
+[===================                    ] 49% Unzipping... platform-tools/lib64/
+[===================                    ] 49% Unzipping... platform-tools/make_f
+[===================                    ] 50% Unzipping... platform-tools/make_f
+[===================                    ] 50% Unzipping... platform-tools/mke2fs
+[====================                   ] 50% Unzipping... platform-tools/mke2fs
+[====================                   ] 51% Unzipping... platform-tools/mke2fs
+[====================                   ] 51% Unzipping... platform-tools/source
+[====================                   ] 51% Unzipping... platform-tools/sqlite
+[====================                   ] 52% Unzipping... platform-tools/sqlite
+[=====================                  ] 53% Unzipping... platform-tools/sqlite
+[=====================                  ] 54% Unzipping... platform-tools/sqlite
+[=====================                  ] 55% Unzipping... platform-tools/sqlite
+[=======================================] 100% Unzipping... platform-tools/sqlit
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   | 
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   ❓ add-matcher /run/act/actions/android-actions-setup-android@v3/matchers.json
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   ✅  Success - Main Setup Android SDK [2m2.4672031s]
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   ⚙  ::set-env:: ANDROID_HOME=/root/.android/sdk
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   ⚙  ::set-env:: ANDROID_SDK_ROOT=/root/.android/sdk
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   ⚙  ::set-output:: ANDROID_COMMANDLINE_TOOLS_VERSION=12266719
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   ⚙  ::add-path:: /root/.android/sdk/cmdline-tools/16.0/bin
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   ⚙  ::add-path:: /root/.android/sdk/platform-tools
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)] ⭐ Run Main Install dependencies
+[React Native CI/CD (Android Release)/Build Android Release (release-aab)]   🐳  docker exec cmd=[bash -e /var/run/act/workflow/4] user= workdir=
