@@ -1,11 +1,8 @@
-act.exe : time="2026-07-04T12:25:55-04:00" level=warning msg="Couldn't get a valid docker connection: no DOCKER_HOST an
-d an invalid container socket ''"
+act.exe : time="2026-07-04T13:36:52-04:00" level=info msg="Using docker host 'npipe:////./pipe/docker_engine', and daem
+on socket 'npipe:////./pipe/docker_engine'"
 At C:\dev\trakl-test\scripts\run-act-build.ps1:15 char:1
 + & $act workflow_dispatch `
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (time="2026-07-0...iner socket ''":String) [], RemoteException
+    + CategoryInfo          : NotSpecified: (time="2026-07-0...docker_engine'":String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-Error: failed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the d
-aemon is running: open //./pipe/docker_engine: The system cannot find the file specified.
-failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine; check if the path is correct and if the daemon is running: open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
