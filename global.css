@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap');
+
+@import 'tailwindcss';
+@import 'uniwind';
+
+@import 'heroui-native/styles';
+
+/*
+ * TRAKL theme tokens — warm industrial minimal.
+ * Light + dark. Themed color tokens live in matching @variant light / @variant
+ * dark blocks (Uniwind requires both themes to declare the same variables).
+ * Non-themed primitives (spacing, radius, white/black) stay on :root.
+ */
+@layer base {
+  :root {
+    --white: oklch(100% 0 0);
+    --black: oklch(0% 0 0);
+
+    --spacing: 0.25rem;
+    --border-width: 1px;
+    --field-border-width: 1px;
+    --disabled-opacity: 0.5;
+    --ring-offset-width: 2px;
+
+    --radius: 0.75rem;
+    --field-radius: calc(var(--radius) * 1);
+
+    --skeleton-animation: shimmer;
+  }
+}
+
+@layer theme {
+  :root {
+    /* ---- Light theme ---- */
+    @variant light {
+      color-scheme: light;
+
+      /* bg #F7F5F0 */
+      --background: oklch(0.9676 0.0046 84.59);
+      --foreground: oklch(0.1822 0.0064 56.04); /* text #141210 */
+
+      /* surface #FFFFFF */
+      --surface: oklch(100% 0 0);
+      --surface-foreground: var(--foreground);
+
+      --overlay: oklch(100% 0 0);
+      --overlay-foreground: var(--foreground);
+
+      /* text-muted #8A8480 */
+      --muted: oklch(0.5847 0.0066 67.78);
+      --scrollbar: oklch(0.8 0.006 67.78);
+
+      /* surface-2 #F0EDE8 */
+      --default: oklch(0.9424 0.0058 84.57);
+      --default-foreground: var(--foreground);
+
+      /* accent (dark) #1A1A1A */
+      --accent: oklch(0.2155 0 0);
+      --accent-foreground: oklch(0.9676 0.0046 84.59);
+
+      --field-background: oklch(0.9424 0.0058 84.57);
+      --field-foreground: var(--foreground);
+      --field-placeholder: oklch(0.8155 0.0066 67.78); /* faint #C5C0BA */
+      --field-border: oklch(0.8907 0.0066 71.47); /* border #E5E1DA */
+
+      --success: oklch(0.5325 0.0884 153.6); /* #2D7A4F */
+      --success-foreground: oklch(100% 0 0);
+
+      --warning: oklch(0.6716 0.139 56.42);
+      --warning-foreground: var(--foreground);
+
+      --danger: oklch(0.5446 0.1772 27.96); /* #C0392B */
+      --danger-foreground: oklch(100% 0 0);
+
+      --segment: oklch(100% 0 0);
+      --segment-foreground: var(--foreground);
+
+      --border: oklch(0.8907 0.0066 71.47); /* #E5E1DA */
+      --separator: oklch(0.8907 0.0066 71.47);
+      --focus: var(--foreground);
+      --link: var(--foreground);
+
+      --backdrop: rgba(20, 18, 16, 0.45);
+
+      --surface-shadow: 0 1px 3px 0 rgba(20, 18, 16, 0.06), 0 0 1px 0 rgba(20, 18, 16, 0.06);
+      --overlay-shadow: 0 12px 32px 0 rgba(20, 18, 16, 0.12);
+      --field-shadow: 0 1px 3px 0 rgba(20, 18, 16, 0.04);
+    }
+
+    /* ---- Dark theme ---- */
+    @variant dark {
+      color-scheme: dark;
+
+      /* bg #141210 */
+      --background: oklch(0.1822 0.0064 56.04);
+      --foreground: oklch(0.9482 0.0046 84.59); /* text #F2EFE9 */
+
+      /* surface #1E1C19 */
+      --surface: oklch(0.2305 0.0048 67.78);
+      --surface-foreground: var(--foreground);
+
+      --overlay: oklch(0.2305 0.0048 67.78);
+      --overlay-foreground: var(--foreground);
+
+      /* text-muted #9A938C */
+      --muted: oklch(0.6396 0.0066 67.78);
+      --scrollbar: oklch(0.35 0.006 67.78);
+
+      /* surface-2 #27241F */
+      --default: oklch(0.2655 0.0052 67.78);
+      --default-foreground: var(--foreground);
+
+      /* accent (light ink) */
+      --accent: oklch(0.9482 0.0046 84.59);
+      --accent-foreground: oklch(0.1822 0.0064 56.04);
+
+      --field-background: oklch(0.2655 0.0052 67.78);
+      --field-foreground: var(--foreground);
+      --field-placeholder: oklch(0.4396 0.0066 67.78); /* faint #5C564F */
+      --field-border: oklch(0.3155 0.0066 67.78); /* border #34302A */
+
+      --success: oklch(0.6492 0.0884 153.6); /* #4FA877 */
+      --success-foreground: oklch(0.1822 0.0064 56.04);
+
+      --warning: oklch(0.7216 0.139 56.42);
+      --warning-foreground: oklch(0.1822 0.0064 56.04);
+
+      --danger: oklch(0.6446 0.1772 27.96); /* #E0614F */
+      --danger-foreground: oklch(0.1822 0.0064 56.04);
+
+      --segment: oklch(0.2305 0.0048 67.78);
+      --segment-foreground: var(--foreground);
+
+      --border: oklch(0.3155 0.0066 67.78); /* #34302A */
+      --separator: oklch(0.3155 0.0066 67.78);
+      --focus: var(--foreground);
+      --link: var(--foreground);
+
+      --backdrop: rgba(0, 0, 0, 0.6);
+
+      --surface-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 0 1px 0 rgba(0, 0, 0, 0.4);
+      --overlay-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.5);
+      --field-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+/* ---- TRAKL custom utility tokens ---- */
+@theme {
+  --color-trakl-bg: #f7f5f0;
+  --color-trakl-surface: #ffffff;
+  --color-trakl-surface-2: #f0ede8;
+  --color-trakl-border: #e5e1da;
+  --color-trakl-text: #141210;
+  --color-trakl-muted: #8a8480;
+  --color-trakl-faint: #c5c0ba;
+  --color-trakl-ink: #1a1a1a;
+  --color-trakl-destructive: #c0392b;
+  --color-trakl-success: #2d7a4f;
+
+  /* tracker accents */
+  --color-tk-finance: #b8860b;
+  --color-tk-habits: #2d7a4f;
+  --color-tk-tasks: #2c5f8a;
+  --color-tk-goals: #6b4c8a;
+  --color-tk-planner: #8a4a2f;
+  --color-tk-sleep: #3a5a8a;
+  --color-tk-fitness: #8a3a3a;
+  --color-tk-custom: #4a4a4a;
+}
+
+@source './node_modules/heroui-native/lib';
