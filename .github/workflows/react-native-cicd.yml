@@ -1,0 +1,209 @@
+name: React Native CI/CD (Android Release)
+
+# Pure Gradle build on GitHub-hosted Ubuntu runner.
+# - Δεν αγγίζει το EAS quota (variant B: expo prebuild + gradlew bundleRelease).
+# - Trigger: manual (workflow_dispatch) ή push σε main.
+# - Output: app-release.aab ως artifact.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build type"
+        type: choice
+        required: false
+        default: "release-aab"
+        options:
+          - release-aab
+          - release-apk
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".github/**"
+
+# Avoid concurrent runs on the same branch; cancel in-progress on new push.
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_OPTIONS: --openssl-legacy-provider
+  EXPO_NO_TELEMETRY: "1"
+  CI: "1"
+
+jobs:
+  build-android-release:
+    name: Build Android Release (${{ github.event.inputs.build_type || 'release-aab' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          # NOTE: don't set cache: gradle here; it would fail because android/
+          # isn't generated yet. We cache ~/.gradle/caches explicitly below.
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 35
+          build-tools-version: 35.0.0
+          ndk-version: 26.1.10909125
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Android project (expo prebuild)
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Cache Gradle (after prebuild so gradle files exist)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/build.gradle', '**/*.gradle') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Decode Android keystore from secret
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -e
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Missing ANDROID_KEYSTORE_BASE64 secret. Add it in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          mkdir -p android/app
+          echo "$KEYSTORE_B64" | base64 -d > android/app/upload-keystore.p12
+          chmod 600 android/app/upload-keystore.p12
+          ls -la android/app/upload-keystore.p12
+          file android/app/upload-keystore.p12
+
+      - name: Convert PKCS12 (.p12) to JKS for Gradle signing
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: android/app
+        run: |
+          set -e
+          if [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "::error::Missing ANDROID_KEYSTORE_PASSWORD secret."
+            exit 1
+          fi
+          # Detect alias in the source .p12 (assume single private key entry).
+          SRC_ALIAS=$(keytool -list -keystore upload-keystore.p12 -storetype PKCS12 \
+                      -storepass "$KEYSTORE_PASSWORD" -noprompt \
+                      | awk '/PrivateKeyEntry/{print $1; exit}' | tr -d ',')
+          if [ -z "$SRC_ALIAS" ]; then
+            echo "::error::No PrivateKeyEntry alias found in upload-keystore.p12"
+            exit 1
+          fi
+          echo "Source alias detected: $SRC_ALIAS"
+          keytool -importkeystore \
+            -srckeystore upload-keystore.p12 \
+            -srcstoretype PKCS12 \
+            -srcstorepass "$KEYSTORE_PASSWORD" \
+            -srcalias "$SRC_ALIAS" \
+            -srckeypass "$KEYSTORE_PASSWORD" \
+            -destkeystore upload-keystore.jks \
+            -deststoretype JKS \
+            -deststorepass "$KEYSTORE_PASSWORD" \
+            -destkeypass "$KEY_PASSWORD" \
+            -destalias "$KEY_ALIAS" \
+            -noprompt
+          ls -la upload-keystore.jks
+          keytool -list -keystore upload-keystore.jks -storepass "$KEYSTORE_PASSWORD" | head -n 5
+
+      - name: Configure release signing in gradle.properties
+        env:
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: android
+        run: |
+          set -e
+          # Validate inputs early so we fail with a clear message.
+          for v in KEY_ALIAS KEYSTORE_PASSWORD KEY_PASSWORD; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required secret: $v"
+              exit 1
+            fi
+          done
+          # Replace existing MYAPP_UPLOAD_* lines (created by Expo prebuild).
+          sed -i "s|^MYAPP_UPLOAD_STORE_FILE=.*|MYAPP_UPLOAD_STORE_FILE=upload-keystore.jks|" gradle.properties
+          sed -i "s|^MYAPP_UPLOAD_KEY_ALIAS=.*|MYAPP_UPLOAD_KEY_ALIAS=${KEY_ALIAS}|" gradle.properties
+          sed -i "s|^MYAPP_UPLOAD_STORE_PASSWORD=.*|MYAPP_UPLOAD_STORE_PASSWORD=${KEYSTORE_PASSWORD}|" gradle.properties
+          sed -i "s|^MYAPP_UPLOAD_KEY_PASSWORD=.*|MYAPP_UPLOAD_KEY_PASSWORD=${KEY_PASSWORD}|" gradle.properties
+          # Append only if a key wasn't present (defensive).
+          grep -q "^MYAPP_UPLOAD_STORE_FILE="     gradle.properties || echo "MYAPP_UPLOAD_STORE_FILE=upload-keystore.jks" >> gradle.properties
+          grep -q "^MYAPP_UPLOAD_KEY_ALIAS="      gradle.properties || echo "MYAPP_UPLOAD_KEY_ALIAS=${KEY_ALIAS}" >> gradle.properties
+          grep -q "^MYAPP_UPLOAD_STORE_PASSWORD=" gradle.properties || echo "MYAPP_UPLOAD_STORE_PASSWORD=${KEYSTORE_PASSWORD}" >> gradle.properties
+          grep -q "^MYAPP_UPLOAD_KEY_PASSWORD="   gradle.properties || echo "MYAPP_UPLOAD_KEY_PASSWORD=${KEY_PASSWORD}" >> gradle.properties
+          echo "---- gradle.properties (signing block) ----"
+          grep -E "^MYAPP_UPLOAD_" gradle.properties || true
+
+      - name: Make gradlew executable
+        working-directory: android
+        run: chmod +x ./gradlew
+
+      - name: Build Release AAB
+        working-directory: android
+        run: ./gradlew bundleRelease --no-daemon --stacktrace
+
+      - name: Build Release APK (only when requested)
+        if: github.event.inputs.build_type == 'release-apk'
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: List built artifacts
+        run: |
+          echo "---- AAB ----"
+          find android/app/build/outputs/bundle -name "*.aab" -type f -exec ls -la {} \;
+          echo "---- APK ----"
+          find android/app/build/outputs/apk -name "*.apk" -type f -exec ls -la {} \;
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload APK artifact (when built)
+        if: github.event.inputs.build_type == 'release-apk'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload mapping files (for Play Console deobfuscation)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-mapping
+          path: |
+            android/app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: ignore
+          retention-days: 30

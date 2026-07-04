@@ -10,6 +10,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
+    owner: 'mopatch',
     name: 'TRAKL',
     slug: 'trakl',
     newArchEnabled: true,
@@ -30,10 +31,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: process.env.BILT_IOS_BUNDLE_ID ?? 'com.yourcompany.yourapp',
     },
     android: {
-      package: process.env.BILT_ANDROID_PACKAGE ?? 'com.yourcompany.yourapp',
+      package: process.env.BILT_ANDROID_PACKAGE ?? 'trakl.app',
+      versionCode: 1,
+      permissions: ['com.google.android.gms.permission.AD_ID'],
     },
     extra: {
       appStoreAppId: process.env.BILT_APP_STORE_APP_ID,
+      eas: {
+        projectId: '926711b5-c6e0-4df2-a9d7-0258442be118',
+      },
     },
     plugins: [
       'expo-router',

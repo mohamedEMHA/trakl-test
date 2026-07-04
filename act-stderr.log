@@ -1,0 +1,17 @@
+act.exe : time="2026-07-04T11:21:40-04:00" level=info msg="Using docker host 'npipe:////./pipe/docker_engine', and daem
+on socket 'npipe:////./pipe/docker_engine'"
+At C:\dev\trakl-test\scripts\run-act-build.ps1:12 char:1
++ & $act workflow_dispatch `
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (time="2026-07-0...docker_engine'":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Error: Error occurred running finally: Error occurred running finally: Error occurred running finally: Error occurred r
+unning finally: Error occurred running finally: Error occurred running finally: Error occurred running finally: Error o
+ccurred running finally: Error occurred running finally: Error occurred running finally: Error occurred running finally
+: Error occurred running finally: Error occurred running finally: Error occurred running finally: Error occurred runnin
+g finally: Error occurred running finally: failed to create exec: Error response from daemon: container 5660dff6fcc3ee1
+c3f8a35e436c29931913053ed78093c0836dd47e1286fd8ad is not running (original error: <nil>) (original error: <nil>) (origi
+nal error: <nil>) (original error: <nil>) (original error: <nil>) (original error: <nil>) (original error: <nil>) (orig
+inal error: <nil>) (original error: <nil>) (original error: <nil>) (original error: <nil>) (original error: <nil>) (ori
+ginal error: <nil>) (original error: <nil>) (original error: <nil>) (original error: <nil>)
