@@ -177,9 +177,9 @@ jobs:
       - name: List built artifacts
         run: |
           echo "---- AAB ----"
-          find android/app/build/outputs/bundle -name "*.aab" -type f -exec ls -la {} \;
+          find android/app/build/outputs/bundle -name "*.aab" -type f -exec ls -la {} \; 2>/dev/null || echo "No AAB found"
           echo "---- APK ----"
-          find android/app/build/outputs/apk -name "*.apk" -type f -exec ls -la {} \;
+          find android/app/build/outputs/apk -name "*.apk" -type f -exec ls -la {} \; 2>/dev/null || echo "No APK (only built when build_type=release-apk)"
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
