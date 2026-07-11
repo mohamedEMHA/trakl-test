@@ -1,5 +1,6 @@
 import { Alert, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 /** Emoji choices offered as a lightweight avatar fallback. */
 export const AVATAR_EMOJIS = [
@@ -18,8 +19,11 @@ export const AVATAR_EMOJIS = [
 ] as const;
 
 /**
- * Launch the system photo library and return a local image URI, or null if the
+ * Launch the system photo library and return a persistent local image URI, or null if the
  * user cancels or denies permission. Safe across iOS / Android / web.
+ *
+ * The returned URI is copied to the app's document directory to ensure it persists
+ * even if the image picker's cache is cleared by the OS.
  */
 export async function pickAvatarImage(): Promise<string | null> {
   if (Platform.OS !== 'web') {
@@ -41,5 +45,28 @@ export async function pickAvatarImage(): Promise<string | null> {
   });
 
   if (result.canceled || result.assets.length === 0) return null;
-  return result.assets[0].uri;
+
+  const pickedUri = result.assets[0].uri;
+
+  // On web, return the URI as-is (blob URL)
+  if (Platform.OS === 'web') {
+    return pickedUri;
+  }
+
+  // On native, copy to app's cache directory for persistence
+  try {
+    // oxlint-disable-next-line typescript-eslint/no-unsafe-member-access -- expo-file-system types incomplete
+    const cacheDir = (FileSystem as Record<string, unknown>).cacheDirectory as string | undefined;
+    if (!cacheDir) return pickedUri; // Fallback if cacheDirectory is unavailable
+    const filename = `avatar-${Date.now()}.jpg`;
+    const persistedUri = `${cacheDir}${filename}`;
+    await FileSystem.copyAsync({
+      from: pickedUri,
+      to: persistedUri,
+    });
+    return persistedUri;
+  } catch (error) {
+    console.warn('[Avatar] Failed to persist image, using original URI:', error);
+    return pickedUri; // Fallback to original URI if copy fails
+  }
 }

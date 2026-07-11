@@ -31,6 +31,7 @@ import { useFormatters } from '@/lib/format';
 import { useColors, useTrackerAccents } from '@/lib/theme';
 import { useTrakl } from '@/lib/store';
 import { haptics } from '@/lib/haptics';
+import type { Transaction, Habit, Task, Goal, SleepEntry, Workout, PlannerEvent, CustomTracker } from '@/lib/types';
 import {
   avgSleepHours,
   bestStreak,
@@ -53,28 +54,36 @@ function greetingKey(): 'home.greetingMorning' | 'home.greetingAfternoon' | 'hom
 
 function trackerStat(
   key: TrackerKey,
-  store: ReturnType<typeof useTrakl.getState>,
+  transactions: Transaction[],
+  monthlyBudget: number,
+  habits: Habit[],
+  tasks: Task[],
+  goals: Goal[],
+  sleep: SleepEntry[],
+  workouts: Workout[],
+  planner: PlannerEvent[],
+  customTrackers: CustomTracker[],
   fmt: ReturnType<typeof useFormatters>,
 ): string {
   switch (key) {
     case 'finance':
-      return fmt.currency(budgetLeft(store.transactions, store.monthlyBudget));
+      return fmt.currency(budgetLeft(transactions, monthlyBudget));
     case 'habits': {
-      const h = habitsToday(store.habits);
+      const h = habitsToday(habits);
       return `${h.done}/${h.total}`;
     }
     case 'tasks':
-      return `${tasksDueToday(store.tasks)}`;
+      return `${tasksDueToday(tasks)}`;
     case 'goals':
-      return `${store.goals.length}`;
+      return `${goals.length}`;
     case 'sleep':
-      return `${lastSleepHours(store.sleep)}h`;
+      return `${lastSleepHours(sleep)}h`;
     case 'fitness':
-      return `${store.workouts.length}`;
+      return `${workouts.length}`;
     case 'planner':
-      return `${store.planner.filter((e) => e.weekOffset === 0).length}`;
+      return `${planner.filter((e) => e.weekOffset === 0).length}`;
     case 'custom':
-      return `${store.customTrackers.length}`;
+      return `${customTrackers.length}`;
     default:
       return '—';
   }
@@ -122,6 +131,13 @@ export default function HomeScreen() {
   const enabledTrackers = useTrakl((s) => s.enabledTrackers);
   const notifications = useTrakl((s) => s.notifications);
   const toggleTask = useTrakl((s) => s.toggleTask);
+  const mood = useTrakl((s) => s.mood);
+  const water = useTrakl((s) => s.water);
+  const weight = useTrakl((s) => s.weight);
+  const meditation = useTrakl((s) => s.meditation);
+  const customTrackers = useTrakl((s) => s.customTrackers);
+  const workouts = useTrakl((s) => s.workouts);
+  const planner = useTrakl((s) => s.planner);
 
   const priorityBar: Record<string, string> = {
     high: colors.destructive,
@@ -402,7 +418,7 @@ export default function HomeScreen() {
                   key={key}
                   tracker={meta}
                   name={t(`trackerNames.${key}`)}
-                  stat={trackerStat(key, useTrakl.getState(), fmt)}
+                  stat={trackerStat(key, transactions, monthlyBudget, habits, tasks, goals, sleep, workouts, planner, customTrackers, fmt)}
                   onPress={() => router.push(meta.route)}
                 />
               );

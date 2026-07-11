@@ -297,7 +297,7 @@ jobs:
           VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
         run: |
           set -e
-          PREVIOUS_MAX=8
+          PREVIOUS_MAX=9
           if [ "${VERSION_CODE:-0}" -le "$PREVIOUS_MAX" ]; then
             echo "::error::versionCode $VERSION_CODE is not greater than the previously uploaded version ($PREVIOUS_MAX). Update the workflow input to a value > $PREVIOUS_MAX."
             exit 1

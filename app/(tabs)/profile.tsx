@@ -160,7 +160,19 @@ export default function ProfileScreen() {
   const setNotifOn = useTrakl((s) => s.setNotificationsEnabled);
   const resetApp = useTrakl((s) => s.resetApp);
   const loadSampleData = useTrakl((s) => s.loadSampleData);
-  const store = useTrakl();
+  const transactions = useTrakl((s) => s.transactions);
+  const habits = useTrakl((s) => s.habits);
+  const tasks = useTrakl((s) => s.tasks);
+  const goals = useTrakl((s) => s.goals);
+  const planner = useTrakl((s) => s.planner);
+  const sleep = useTrakl((s) => s.sleep);
+  const workouts = useTrakl((s) => s.workouts);
+  const mood = useTrakl((s) => s.mood);
+  const water = useTrakl((s) => s.water);
+  const weight = useTrakl((s) => s.weight);
+  const meditation = useTrakl((s) => s.meditation);
+  const customTrackers = useTrakl((s) => s.customTrackers);
+  const monthlyBudget = useTrakl((s) => s.monthlyBudget);
 
   const [themeOpen, setThemeOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -200,30 +212,30 @@ export default function ProfileScreen() {
 
   // True once the user has logged anything across any tracker.
   const hasAnyData =
-    store.transactions.length > 0 ||
-    store.habits.length > 0 ||
-    store.tasks.length > 0 ||
-    store.goals.length > 0 ||
-    store.planner.length > 0 ||
-    store.sleep.length > 0 ||
-    store.workouts.length > 0 ||
-    store.mood.length > 0 ||
-    store.water.length > 0 ||
-    store.weight.length > 0 ||
-    store.meditation.length > 0 ||
-    store.customTrackers.length > 0;
+    transactions.length > 0 ||
+    habits.length > 0 ||
+    tasks.length > 0 ||
+    goals.length > 0 ||
+    planner.length > 0 ||
+    sleep.length > 0 ||
+    workouts.length > 0 ||
+    mood.length > 0 ||
+    water.length > 0 ||
+    weight.length > 0 ||
+    meditation.length > 0 ||
+    customTrackers.length > 0;
 
   const score = lifeScore({
-    habits: store.habits,
-    tasks: store.tasks,
-    sleep: store.sleep,
-    goals: store.goals,
-    transactions: store.transactions,
-    monthlyBudget: store.monthlyBudget,
+    habits,
+    tasks,
+    sleep,
+    goals,
+    transactions,
+    monthlyBudget,
     enabledTrackers: enabled,
   });
-  const tasksDone = store.tasks.filter((tk) => tk.done).length;
-  const streak = bestStreak(store.habits);
+  const tasksDone = tasks.filter((tk) => tk.done).length;
+  const streak = bestStreak(habits);
 
   const memberSince = fmt.date(profile.memberSince, {
     month: 'short',
@@ -459,6 +471,39 @@ export default function ProfileScreen() {
             <Caption color={colors.faint} style={{ textAlign: 'center' }}>
               TRAKL · Everything. Tracked.
             </Caption>
+            <View className="flex-row gap-2 justify-center">
+              <PressableScale
+                feedback="chip"
+                onPress={() => void Linking.openURL(t('legal.privacyUrl'))}
+                hitSlop={8}
+                accessibilityRole="link"
+                accessibilityLabel={t('legal.privacyPolicy')}
+              >
+                <Caption
+                  color={colors.muted}
+                  style={{ fontSize: 11, textDecorationLine: 'underline' }}
+                >
+                  {t('legal.privacyPolicy')}
+                </Caption>
+              </PressableScale>
+              <Caption color={colors.faint} style={{ fontSize: 11 }}>
+                ·
+              </Caption>
+              <PressableScale
+                feedback="chip"
+                onPress={() => void Linking.openURL(t('legal.termsUrl'))}
+                hitSlop={8}
+                accessibilityRole="link"
+                accessibilityLabel={t('legal.termsOfService')}
+              >
+                <Caption
+                  color={colors.muted}
+                  style={{ fontSize: 11, textDecorationLine: 'underline' }}
+                >
+                  {t('legal.termsOfService')}
+                </Caption>
+              </PressableScale>
+            </View>
             <PressableScale
               feedback="chip"
               onPress={() => void Linking.openURL('https://www.pimora.tech/')}

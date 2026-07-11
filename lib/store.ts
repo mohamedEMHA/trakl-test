@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { TrackerKey } from './trackers';
+import { saveTransactionsSecure, getTransactionsSecure, deleteTransactionsSecure } from './secureStorage';
 import type {
   Achievement,
   AppNotification,
@@ -575,6 +576,20 @@ export const useTrakl = create<TraklState>()(
             const hasTx = Array.isArray(record.transactions) && record.transactions.length > 0;
             if (!hasTx) record.monthlyBudget = 0;
           }
+          // Backfill missing tracker arrays for users who upgraded from very old
+          // versions before all trackers existed. Initialize with empty arrays.
+          if (!Array.isArray(record.transactions)) record.transactions = [];
+          if (!Array.isArray(record.habits)) record.habits = [];
+          if (!Array.isArray(record.tasks)) record.tasks = [];
+          if (!Array.isArray(record.goals)) record.goals = [];
+          if (!Array.isArray(record.planner)) record.planner = [];
+          if (!Array.isArray(record.sleep)) record.sleep = [];
+          if (!Array.isArray(record.workouts)) record.workouts = [];
+          if (!Array.isArray(record.mood)) record.mood = [];
+          if (!Array.isArray(record.water)) record.water = [];
+          if (!Array.isArray(record.weight)) record.weight = [];
+          if (!Array.isArray(record.meditation)) record.meditation = [];
+          if (!Array.isArray(record.customTrackers)) record.customTrackers = [];
           return record;
         } catch {
           // Never let a migration bug discard the whole persisted blob. Returning

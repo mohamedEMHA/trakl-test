@@ -2,6 +2,8 @@ import type { ConfigContext, ExpoConfig } from '@expo/config';
 
 type ExpoPlugins = NonNullable<ExpoConfig['plugins']>;
 
+const CURRENT_VERSION_CODE = 9;
+
 function requireEnv(name: string, fallback: string): string {
   const value = process.env[name];
   if (process.env.CI === '1' || process.env.CI === 'true') {
@@ -19,10 +21,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ? [['expo-dev-client', { launchMode: 'most-recent' }], 'react-native-maps']
       : [];
 
-  const appVersion = requireEnv('BILT_APP_VERSION', '1.0.0');
-  const androidPackage = requireEnv('BILT_ANDROID_PACKAGE', 'trakl.app');
-  const iosBundleId = requireEnv('BILT_IOS_BUNDLE_ID', 'com.yourcompany.yourapp');
-  const androidVersionCode = Number(requireEnv('BILT_ANDROID_VERSION_CODE', '2'));
+  const appVersion = requireEnv('BILT_APP_VERSION', '1.0.1');
+  const androidPackage = requireEnv('BILT_ANDROID_PACKAGE', 'tech.pimora.trakl');
+  const iosBundleId = requireEnv('BILT_IOS_BUNDLE_ID', 'tech.pimora.trakl');
+  const androidVersionCode = Number(requireEnv('BILT_ANDROID_VERSION_CODE', String(CURRENT_VERSION_CODE)));
 
   if (!Number.isInteger(androidVersionCode) || androidVersionCode <= 0) {
     throw new Error(`Invalid BILT_ANDROID_VERSION_CODE: ${androidVersionCode}. Must be a positive integer.`);
@@ -46,6 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSUserTrackingUsageDescription: 'TRAKL uses your advertising identifier to deliver personalized ads and measure ad effectiveness. You can change this in Settings.',
       },
       supportsTablet: true,
       bundleIdentifier: iosBundleId,

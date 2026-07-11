@@ -6,6 +6,8 @@ import { ClashText, InterText } from '@/components/Typography';
 import { bannerUnitId, USE_TEST_ADS } from '@/lib/admobConfig';
 import { useColors } from '@/lib/theme';
 import { withAlpha } from '@/lib/trackers';
+import { getConsentStatus } from '@/lib/consent';
+import { ConsentSheet } from '@/components/ConsentSheet';
 
 // Platform-correct banner unit ID (Android unit on Android, iOS unit on iOS),
 // test unit in dev / production unit in release. See lib/admobConfig.ts.
@@ -64,47 +66,84 @@ export function AdBanner() {
   const [ads, setAds] = useState<GoogleMobileAds | null>(null);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [consentStatus, setConsentStatus] = useState<'unknown' | 'granted' | 'denied'>('unknown');
+  const [showConsentSheet, setShowConsentSheet] = useState(false);
 
   useEffect(() => {
-    console.log(`${LOG} unit in use:`, BANNER_UNIT_ID, USE_TEST_ADS ? '(TEST)' : '(PROD)');
+    if (__DEV__) {
+      console.log(`${LOG} unit in use:`, BANNER_UNIT_ID, USE_TEST_ADS ? '(TEST)' : '(PROD)');
+    }
+    // Check consent status on mount
+    void getConsentStatus().then((status) => {
+      setConsentStatus(status);
+      if (status === 'unknown') {
+        setShowConsentSheet(true);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    // Don't load ads until consent is determined
+    if (consentStatus === 'unknown') return;
+
     // Don't even attempt to load the native ad SDK in Expo Go — accessing the
     // module there throws a fatal "module could not be found" error.
     if (isExpoGo) {
-      console.warn(`${LOG} running in Expo Go — native AdMob SDK unavailable. Use a dev build.`);
+      if (__DEV__) {
+        console.warn(`${LOG} running in Expo Go — native AdMob SDK unavailable. Use a dev build.`);
+      }
       setFailed(true);
       return undefined;
     }
     let mounted = true;
-    console.log(`${LOG} loading native SDK module...`);
+    if (__DEV__) {
+      console.log(`${LOG} loading native SDK module...`);
+    }
     import('react-native-google-mobile-ads')
       .then((mod) => {
         if (!mounted) return;
         try {
           if (mod?.default && mod?.BannerAd) {
-            console.log(`${LOG} module loaded, initializing SDK...`);
+            if (__DEV__) {
+              console.log(`${LOG} module loaded, initializing SDK...`);
+            }
             mod
               .default()
               .initialize()
-              .then((statuses) => console.log(`${LOG} SDK initialized:`, statuses))
-              .catch((e) => console.warn(`${LOG} SDK init error:`, e));
+              .then((statuses) => {
+                if (__DEV__) {
+                  console.log(`${LOG} SDK initialized:`, statuses);
+                }
+              })
+              .catch((e) => {
+                if (__DEV__) {
+                  console.warn(`${LOG} SDK init error:`, e);
+                }
+              });
             setAds(mod);
           } else {
-            console.warn(`${LOG} module loaded but BannerAd/default missing.`);
+            if (__DEV__) {
+              console.warn(`${LOG} module loaded but BannerAd/default missing.`);
+            }
             setFailed(true);
           }
         } catch (e) {
-          console.warn(`${LOG} native module not registered in this binary:`, e);
+          if (__DEV__) {
+            console.warn(`${LOG} native module not registered in this binary:`, e);
+          }
           setFailed(true);
         }
       })
       .catch((e) => {
-        console.warn(`${LOG} failed to import native SDK:`, e);
+        if (__DEV__) {
+          console.warn(`${LOG} failed to import native SDK:`, e);
+        }
         if (mounted) setFailed(true);
       });
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [consentStatus]);
 
   // No SDK, failed import, or the ad failed to load -> styled placeholder.
   if (failed || !ads) {
@@ -114,35 +153,49 @@ export function AdBanner() {
   const { BannerAd, BannerAdSize } = ads;
 
   return (
-    <View
-      style={{
-        backgroundColor: colors.surface2,
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-      }}
-      className="w-full items-center justify-center"
-    >
-      {/* Keep the styled placeholder visible until a real ad is loaded so the
-          area never appears blank while the request is in flight. */}
-      {!loaded && <PlaceholderBanner />}
-      <BannerAd
-        unitId={BANNER_UNIT_ID}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        onAdLoaded={() => {
-          console.log(`${LOG} ad loaded successfully ✅ (unit ${BANNER_UNIT_ID})`);
-          setLoaded(true);
+    <>
+      <View
+        style={{
+          backgroundColor: colors.surface2,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
         }}
-        onAdFailedToLoad={(error: Error & { code?: string | number }) => {
-          // error: Error with an extra `code` from the Google Mobile Ads SDK.
-          console.warn(
-            `${LOG} ad FAILED to load ❌ code=${error?.code ?? 'n/a'} message=${
-              error?.message ?? 'n/a'
-            }`,
-          );
-          setLoaded(false);
-          setFailed(true);
+        className="w-full items-center justify-center"
+      >
+        {/* Keep the styled placeholder visible until a real ad is loaded so the
+            area never appears blank while the request is in flight. */}
+        {!loaded && <PlaceholderBanner />}
+        {consentStatus === 'granted' && (
+          <BannerAd
+            unitId={BANNER_UNIT_ID}
+            size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+            onAdLoaded={() => {
+              if (__DEV__) {
+                console.log(`${LOG} ad loaded successfully ✅ (unit ${BANNER_UNIT_ID})`);
+              }
+              setLoaded(true);
+            }}
+            onAdFailedToLoad={(error: Error & { code?: string | number }) => {
+              if (__DEV__) {
+                console.warn(
+                  `${LOG} ad FAILED to load ❌ code=${error?.code ?? 'n/a'} message=${
+                    error?.message ?? 'n/a'
+                  }`,
+                );
+              }
+              setLoaded(false);
+              setFailed(true);
+            }}
+          />
+        )}
+      </View>
+      <ConsentSheet
+        visible={showConsentSheet}
+        onClose={(granted) => {
+          setShowConsentSheet(false);
+          setConsentStatus(granted ? 'granted' : 'denied');
         }}
       />
-    </View>
+    </>
   );
 }

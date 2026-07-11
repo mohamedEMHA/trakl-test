@@ -26,6 +26,7 @@ import { reportErrorToParent } from '@/lib/reportPreviewError';
 import { ClashDisplayFonts } from '@/lib/fonts';
 import { useColors, useThemeSync } from '@/lib/theme';
 import { useReminderSync } from '@/lib/useReminderSync';
+import { useTransactionSync } from '@/lib/useTransactionSync';
 import { initI18n } from '@/lib/i18n';
 
 /**
@@ -159,6 +160,7 @@ export default function RootLayout() {
 function RootStack() {
   useThemeSync();
   useReminderSync();
+  useTransactionSync();
   const colors = useColors();
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>

@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
 import i18n from 'i18next';
-import { I18nManager } from 'react-native';
+import { I18nManager, Platform } from 'react-native';
 import { initReactI18next } from 'react-i18next';
+import * as Updates from 'expo-updates';
 import { LANGUAGE_BY_CODE, LANGUAGES } from './languages';
 import { ar } from './locales/ar';
 import { bn } from './locales/bn';
@@ -108,6 +109,17 @@ export async function changeLanguage(code: string) {
     // non-fatal: persistence failure shouldn't block the switch
   }
   applyDirection(code);
+  // On native, reload the app to apply RTL/LTR layout changes visually.
+  // On web, layout changes apply immediately via CSS.
+  if (Platform.OS !== 'web') {
+    try {
+      await Updates.reloadAsync();
+    } catch (error) {
+      // Reload may fail in Expo Go or dev builds; layout direction is still applied
+      // but visual changes require a manual app restart.
+      console.warn('[i18n] Failed to reload app for RTL/LTR change:', error);
+    }
+  }
 }
 
 export default i18n;

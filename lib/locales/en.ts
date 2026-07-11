@@ -704,6 +704,22 @@ export const en = {
     notifGoalTitle: 'Milestone reached',
     notifGoalMsg: 'You hit a milestone on Save €5,000',
   },
+  consent: {
+    title: 'Personalized Ads & Analytics',
+    description: 'TRAKL uses Google Mobile Ads to show you personalized ads and measure ad performance. Your data is processed in accordance with our Privacy Policy.',
+    personalized: 'Personalized ads based on your interests',
+    measurement: 'Measurement of ad effectiveness',
+    noTracking: 'We do not sell or share your personal data',
+    privacyNote: 'You can change your consent anytime in Settings.',
+    accept: 'Accept & Continue',
+    reject: 'Reject',
+  },
+  legal: {
+    privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
+    privacyUrl: 'https://www.pimora.tech/privacy',
+    termsUrl: 'https://www.pimora.tech/terms',
+  },
 };
 
 export type Resources = typeof en;
