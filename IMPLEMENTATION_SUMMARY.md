@@ -29,8 +29,8 @@ Comprehensive implementation of all fixes from the TRAKL app review. The app now
 
 #### Version Management
 - **File**: `app.config.ts`, `.github/workflows/react-native-cicd.yml`
-- Single source of truth: `CURRENT_VERSION_CODE = 10` in app.config.ts
-- CI workflow validates version code > 10 before release
+- Single source of truth: `CURRENT_VERSION_CODE = 9` in app.config.ts
+- CI workflow validates version code > 9 before release
 - Prevents accidental version downgrades
 
 ### 2. Security & Data Storage (✅ Complete)

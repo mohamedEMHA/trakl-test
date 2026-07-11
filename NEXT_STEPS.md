@@ -96,7 +96,7 @@ eas build --platform android --type release
 Then upload to Google Play Console.
 
 **Checklist**:
-- [ ] Version code > 10 (set in `app.config.ts`)
+- [ ] Version code > 9 (set in `app.config.ts`)
 - [ ] Privacy policy URL provided in Play Console
 - [ ] Target API level meets current requirements
 - [ ] All permissions justified
