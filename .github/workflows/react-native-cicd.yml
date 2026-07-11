@@ -100,6 +100,24 @@ jobs:
           BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
         run: npx expo prebuild --platform android --clean --no-install
 
+      - name: Increase Gradle JVM memory & disable lint
+        working-directory: android
+        run: |
+          # Increase metaspace from default 512MB to 1GB to avoid OOM on large projects
+          if grep -q '^org.gradle.jvmargs=' gradle.properties; then
+            sed -i 's|^org.gradle.jvmargs=.*|org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g|' gradle.properties
+          else
+            echo 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g' >> gradle.properties
+          fi
+          # Disable lint vital analysis — it consumes significant metaspace and is not needed for AAB
+          if grep -q '^android.lintVitalRelease=' gradle.properties; then
+            sed -i 's|^android.lintVitalRelease=.*|android.lintVitalRelease=false|' gradle.properties
+          else
+            echo 'android.lintVitalRelease=false' >> gradle.properties
+          fi
+          echo '---- gradle.properties (memory & lint patched) ----'
+          grep -E 'org.gradle.jvmargs|android.lintVitalRelease' gradle.properties
+
       - name: Cache Gradle (after prebuild so gradle files exist)
         uses: actions/cache@v4
         with:

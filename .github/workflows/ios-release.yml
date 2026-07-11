@@ -1,33 +1,19 @@
-name: iOS CI/CD (EAS)
+name: iOS CI/CD (Xcode)
 
-# EAS-based iOS build / submit. This requires:
-#   - EXPO_TOKEN in GitHub Secrets (Settings → Secrets → Actions).
-#   - Apple App Store Connect API key in GitHub Secrets:
-#       ASC_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY (base64 of the .p8 key).
-#   - The EAS project must be linked (extra.eas.projectId in app.config.ts).
+# Pure Xcode build on GitHub-hosted macOS runner.
+# - Δεν αγγίζει το EAS quota (expo prebuild + xcodebuild archive).
+# - Trigger: manual (workflow_dispatch) ή push σε main.
+# - Output: TRAKL.ipa ως artifact.
 #
-# Trigger: manual (workflow_dispatch) or push to main.
+# Required GitHub Secrets:
+#   - APPLE_CERT_BASE64: Distribution certificate (.p12) encoded as base64
+#   - APPLE_CERT_PASSWORD: Password for the .p12 certificate
+#   - APPLE_PROVISIONING_PROFILE_BASE64: Provisioning profile (.mobileprovision) encoded as base64
+#   - APPLE_KEYCHAIN_PASSWORD: Any random password used to create a temporary keychain
 
 on:
   workflow_dispatch:
     inputs:
-      command:
-        description: "EAS command"
-        type: choice
-        required: false
-        default: "build"
-        options:
-          - build
-          - submit
-      build_profile:
-        description: "EAS build profile"
-        type: choice
-        required: false
-        default: "production"
-        options:
-          - production
-          - preview
-          - development
       version_name:
         description: "iOS versionName (display string)"
         type: string
@@ -40,15 +26,20 @@ on:
       - "docs/**"
       - ".github/**"
 
+# Avoid concurrent runs on the same branch; cancel in-progress on new push.
+concurrency:
+  group: ios-release-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   EXPO_NO_TELEMETRY: "1"
   CI: "1"
 
 jobs:
-  ios-eas:
-    name: iOS EAS ${{ github.event.inputs.command || 'build' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+  build-ios-release:
+    name: Build iOS Release
+    runs-on: macos-latest
+    timeout-minutes: 90
     permissions:
       contents: read
 
@@ -62,77 +53,191 @@ jobs:
           node-version: "20"
           cache: npm
 
+      - name: Resolve build inputs
+        id: inputs
+        run: |
+          VERSION_NAME="${{ github.event.inputs.version_name }}"
+          echo "version_name=${VERSION_NAME:-1.0.1}" >> "$GITHUB_OUTPUT"
+          echo "Resolved: versionName=${VERSION_NAME:-1.0.1}"
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate EAS token
+      - name: Generate iOS project (expo prebuild)
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          if [ -z "$EXPO_TOKEN" ]; then
-            echo "::error::Missing EXPO_TOKEN secret. Add it in Settings → Secrets and variables → Actions."
-            exit 1
-          fi
-          echo "EXPO_TOKEN is set."
+          BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
+          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
+          BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
+          BILT_ANDROID_VERSION_CODE: "1"
+          EXPO_PLATFORM: "native"
+        run: npx expo prebuild --platform ios --clean --no-install
 
-      - name: Validate Apple credentials (build only)
-        if: github.event.inputs.command != 'submit'
+      - name: Validate Apple signing secrets
         env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+          APPLE_CERT_BASE64: ${{ secrets.APPLE_CERT_BASE64 }}
+          APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
+          APPLE_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
         run: |
+          set -e
           missing=""
-          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_API_KEY; do
+          for v in APPLE_CERT_BASE64 APPLE_CERT_PASSWORD APPLE_PROVISIONING_PROFILE_BASE64 APPLE_KEYCHAIN_PASSWORD; do
             eval "val=\$$v"
             if [ -z "$val" ]; then
               missing="$missing $v"
             fi
           done
           if [ -n "$missing" ]; then
-            echo "::error::Missing Apple credentials:$missing. Add them as GitHub Actions secrets."
+            echo "::error::Missing Apple signing secrets:$missing"
+            echo "Add them in Settings → Secrets and variables → Actions."
+            echo "  APPLE_CERT_BASE64: base64-encoded .p12 distribution certificate"
+            echo "  APPLE_CERT_PASSWORD: password for the .p12"
+            echo "  APPLE_PROVISIONING_PROFILE_BASE64: base64-encoded .mobileprovision"
+            echo "  APPLE_KEYCHAIN_PASSWORD: any random string for temporary keychain"
             exit 1
           fi
-          echo "Apple credentials are set."
+          echo "Apple signing secrets are set."
 
-      - name: Write ASC API key to disk
-        if: github.event.inputs.command != 'submit'
+      - name: Import signing certificate into temporary keychain
         env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+          APPLE_CERT_BASE64: ${{ secrets.APPLE_CERT_BASE64 }}
+          APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
+          APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
         run: |
-          mkdir -p ~/.eas
-          echo "$ASC_API_KEY" | base64 -d > ~/.eas/asc-api-key.p8
-          chmod 600 ~/.eas/asc-api-key.p8
+          set -e
+          KEYCHAIN=build.keychain
+          KEYCHAIN_PATH="$HOME/Library/Keychains/$KEYCHAIN-db"
+          # Create a temporary keychain
+          security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          # Import the certificate
+          CERT_PATH="$RUNNER_TEMP/cert.p12"
+          echo "$APPLE_CERT_BASE64" | base64 -d > "$CERT_PATH"
+          security import "$CERT_PATH" -P "$APPLE_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | sed 's/"//g')
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "Certificate imported successfully."
 
-      - name: Set up EAS CLI
-        run: npm install -g eas-cli@latest
-
-      - name: Build iOS on EAS
-        if: github.event.inputs.command != 'submit'
+      - name: Install provisioning profile
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          BILT_APP_VERSION: ${{ github.event.inputs.version_name || '1.0.1' }}
+          APPLE_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          set -e
+          PP_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PP_DIR"
+          PP_PATH="$PP_DIR/build.mobileprovision"
+          echo "$APPLE_PROVISIONING_PROFILE_BASE64" | base64 -d > "$PP_PATH"
+          # Extract UUID from the profile
+          PP_UUID=$(security cms -D -i "$PP_PATH" | plutil -extract UUID raw -)
+          if [ -z "$PP_UUID" ]; then
+            echo "::error::Could not extract UUID from provisioning profile"
+            exit 1
+          fi
+          echo "Provisioning profile UUID: $PP_UUID"
+          echo "pp_uuid=$PP_UUID" >> "$GITHUB_ENV"
+          # Rename to UUID.mobileprovision (Xcode expects this)
+          mv "$PP_PATH" "$PP_DIR/$PP_UUID.mobileprovision"
+
+      - name: Patch Xcode project for signing
+        env:
+          BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
+        working-directory: ios
+        run: |
+          set -e
+          # Determine the main target name from the xcodeproj
+          TARGET_NAME=$(xcodebuild -list -project TRAKL.xcodeproj -json | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['project']['targets'][0])")
+          echo "Target: $TARGET_NAME"
+          echo "target_name=$TARGET_NAME" >> "$GITHUB_ENV"
+
+          # Patch project.pbxproj: set DEVELOPMENT_TEAM, CODE_SIGN_STYLE, etc.
+          PBXPROJ=TRAKL.xcodeproj/project.pbxproj
+
+          # Extract team ID from the certificate (OU field)
+          TEAM_ID=$(security find-certificate -c -p / | openssl x509 -noout -subject | grep -oE 'OU=[A-Z0-9]+' | head -1 | cut -d= -f2)
+          if [ -z "$TEAM_ID" ]; then
+            echo "::error::Could not extract Team ID from certificate"
+            exit 1
+          fi
+          echo "Team ID: $TEAM_ID"
+          echo "team_id=$TEAM_ID" >> "$GITHUB_ENV"
+
+          # Set signing settings for all Release build configurations
+          sed -i '' "s/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g" "$PBXPROJ"
+          sed -i '' "s/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = \"iPhone Distribution\"/g" "$PBXPROJ"
+          sed -i '' "s/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = $TEAM_ID/g" "$PBXPROJ"
+          sed -i '' "s/PROVISIONING_PROFILE = .*/PROVISIONING_PROFILE = \"$pp_uuid\"/g" "$PBXPROJ"
+          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = \"\"/g" "$PBXPROJ"
+
+          echo "---- Patched signing settings ----"
+          grep -E "CODE_SIGN_STYLE|CODE_SIGN_IDENTITY|DEVELOPMENT_TEAM|PROVISIONING_PROFILE" "$PBXPROJ" | head -20
+
+      - name: Build IPA (archive + export)
+        env:
+          BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
           BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_API_KEY_PATH: ~/.eas/asc-api-key.p8
+          BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
+          BILT_ANDROID_VERSION_CODE: "1"
+        working-directory: ios
         run: |
-          eas build --platform ios --profile ${{ github.event.inputs.build_profile || 'production' }} --non-interactive --no-wait
+          set -e
+          ARCHIVE_PATH="$RUNNER_TEMP/TRAKL.xcarchive"
+          EXPORT_DIR="$RUNNER_TEMP/export"
 
-      - name: Submit iOS to App Store
-        if: github.event.inputs.command == 'submit'
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+          # Build archive
+          xcodebuild archive \
+            -project TRAKL.xcodeproj \
+            -scheme "$target_name" \
+            -configuration Release \
+            -archivePath "$ARCHIVE_PATH" \
+            -destination "generic/platform=iOS" \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="iPhone Distribution" \
+            DEVELOPMENT_TEAM="$team_id" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            PROVISIONING_PROFILE="$pp_uuid"
+
+          # Create ExportOptions.plist
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>$team_id</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <false/>
+            <key>compileBitcode</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
+
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$EXPORT_DIR" \
+            -allowProvisioningUpdates
+
+          echo "---- Exported IPA ----"
+          ls -la "$EXPORT_DIR"/*.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-ipa
+          path: ${{ runner.temp }}/export/*.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Clean up temporary keychain
+        if: always()
         run: |
-          if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$ASC_API_KEY" ]; then
-            echo "::error::Missing Apple credentials for EAS submit."
-            exit 1
-          fi
-          mkdir -p ~/.eas
-          echo "$ASC_API_KEY" | base64 -d > ~/.eas/asc-api-key.p8
-          chmod 600 ~/.eas/asc-api-key.p8
-          eas submit --platform ios --profile ${{ github.event.inputs.build_profile || 'production' }} --non-interactive
+          security delete-keychain build.keychain 2>/dev/null || true
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/$pp_uuid.mobileprovision" 2>/dev/null || true
