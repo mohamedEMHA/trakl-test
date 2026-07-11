@@ -1,6 +1,5 @@
-import type { Resources } from './en';
 
-export const ja: Resources = {
+export const ja = {
   tabs: { home: 'ホーム', trackers: 'トラッカー', analytics: '分析', profile: 'プロフィール' },
   common: {
     seeAll: 'すべて見る',

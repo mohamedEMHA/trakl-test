@@ -1,6 +1,5 @@
-import type { Resources } from './en';
 
-export const vi: Resources = {
+export const vi = {
   tabs: { home: 'Trang chủ', trackers: 'Theo dõi', analytics: 'Phân tích', profile: 'Hồ sơ' },
   common: {
     seeAll: 'Xem tất cả',

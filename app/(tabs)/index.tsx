@@ -31,16 +31,21 @@ import { useFormatters } from '@/lib/format';
 import { useColors, useTrackerAccents } from '@/lib/theme';
 import { useTrakl } from '@/lib/store';
 import { haptics } from '@/lib/haptics';
-import type { Transaction, Habit, Task, Goal, SleepEntry, Workout, PlannerEvent, CustomTracker } from '@/lib/types';
+import type { Transaction, Habit, Task, Goal, SleepEntry, Workout, PlannerEvent, CustomTracker, MoodEntry, WaterEntry, WeightEntry, MeditationSession } from '@/lib/types';
 import {
+  avgMood,
   avgSleepHours,
   bestStreak,
   budgetLeft,
   habitsToday,
   lastSleepHours,
+  latestWeight,
   lifeScore,
+  meditationStreak,
+  meditationToday,
   monthNet,
   tasksDueToday,
+  waterToday,
 } from '@/lib/stats';
 
 import type { LucideIcon } from 'lucide-react-native';
@@ -63,6 +68,11 @@ function trackerStat(
   workouts: Workout[],
   planner: PlannerEvent[],
   customTrackers: CustomTracker[],
+  mood: MoodEntry[],
+  water: WaterEntry[],
+  weight: WeightEntry[],
+  meditation: MeditationSession[],
+  waterGoal: number,
   fmt: ReturnType<typeof useFormatters>,
 ): string {
   switch (key) {
@@ -84,6 +94,22 @@ function trackerStat(
       return `${planner.filter((e) => e.weekOffset === 0).length}`;
     case 'custom':
       return `${customTrackers.length}`;
+    case 'mood': {
+      const avg = avgMood(mood);
+      return avg ? `${avg}/5` : '—';
+    }
+    case 'water': {
+      const glasses = waterToday(water);
+      return `${glasses}/${waterGoal}`;
+    }
+    case 'weight': {
+      const kg = latestWeight(weight);
+      return kg != null ? `${kg} kg` : '—';
+    }
+    case 'meditation': {
+      const todayMin = meditationToday(meditation);
+      return todayMin ? `${todayMin}m` : `${meditationStreak(meditation)}d`;
+    }
     default:
       return '—';
   }
@@ -135,6 +161,7 @@ export default function HomeScreen() {
   const water = useTrakl((s) => s.water);
   const weight = useTrakl((s) => s.weight);
   const meditation = useTrakl((s) => s.meditation);
+  const waterGoal = useTrakl((s) => s.waterGoal);
   const customTrackers = useTrakl((s) => s.customTrackers);
   const workouts = useTrakl((s) => s.workouts);
   const planner = useTrakl((s) => s.planner);
@@ -418,7 +445,24 @@ export default function HomeScreen() {
                   key={key}
                   tracker={meta}
                   name={t(`trackerNames.${key}`)}
-                  stat={trackerStat(key, transactions, monthlyBudget, habits, tasks, goals, sleep, workouts, planner, customTrackers, fmt)}
+                  stat={trackerStat(
+                    key,
+                    transactions,
+                    monthlyBudget,
+                    habits,
+                    tasks,
+                    goals,
+                    sleep,
+                    workouts,
+                    planner,
+                    customTrackers,
+                    mood,
+                    water,
+                    weight,
+                    meditation,
+                    waterGoal,
+                    fmt,
+                  )}
                   onPress={() => router.push(meta.route)}
                 />
               );

@@ -1,6 +1,5 @@
-import type { Resources } from './en';
 
-export const id: Resources = {
+export const id = {
   tabs: { home: 'Beranda', trackers: 'Pelacak', analytics: 'Analitik', profile: 'Profil' },
   common: {
     seeAll: 'Lihat semua',

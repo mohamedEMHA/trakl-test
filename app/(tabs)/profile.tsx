@@ -11,6 +11,7 @@ import {
   Cloud,
   Cpu,
   Crown,
+  Download,
   Globe,
   HelpCircle,
   Info,
@@ -21,6 +22,7 @@ import {
   Star,
   Sun,
   Trash2,
+  Upload,
   UserPen,
   XCircle,
   Zap,
@@ -28,6 +30,7 @@ import {
 
 import { AdBanner } from '@/components/AdBanner';
 import { Avatar } from '@/components/Avatar';
+import { BackupSheet } from '@/components/BackupSheet';
 import { Card } from '@/components/Card';
 import { EditProfileSheet } from '@/components/EditProfileSheet';
 import { OptionSheet, type SheetOption } from '@/components/OptionSheet';
@@ -47,6 +50,7 @@ import { changeLanguage } from '@/lib/i18n';
 import { codeToName, LANGUAGES, nameToCode } from '@/lib/languages';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { useTrakl } from '@/lib/store';
+import { shareBackup } from '@/lib/backup';
 import { bestStreak, lifeScore } from '@/lib/stats';
 
 function StatPill({ icon: Icon, value }: { icon: typeof Zap; value: string }) {
@@ -160,6 +164,8 @@ export default function ProfileScreen() {
   const setNotifOn = useTrakl((s) => s.setNotificationsEnabled);
   const resetApp = useTrakl((s) => s.resetApp);
   const loadSampleData = useTrakl((s) => s.loadSampleData);
+  const exportAppData = useTrakl((s) => s.exportAppData);
+  const importAppData = useTrakl((s) => s.importAppData);
   const transactions = useTrakl((s) => s.transactions);
   const habits = useTrakl((s) => s.habits);
   const tasks = useTrakl((s) => s.tasks);
@@ -183,6 +189,11 @@ export default function ProfileScreen() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [sampleOpen, setSampleOpen] = useState(false);
   const [notifDeniedOpen, setNotifDeniedOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const [pendingImport, setPendingImport] = useState('');
+  const [importResult, setImportResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [importResultOpen, setImportResultOpen] = useState(false);
 
   const onToggleNotifications = (value: boolean) => {
     setNotifOn(value);
@@ -208,6 +219,27 @@ export default function ProfileScreen() {
   const confirmLoadSample = () => {
     loadSampleData();
     setSampleOpen(false);
+  };
+
+  const onExportBackup = () => {
+    const json = exportAppData();
+    void shareBackup(json);
+    setImportResult({ success: true, message: t('backup.exportSuccess') });
+    setImportResultOpen(true);
+  };
+
+  const onSubmitImport = (json: string) => {
+    setImportOpen(false);
+    setPendingImport(json);
+    setImportConfirmOpen(true);
+  };
+
+  const confirmImport = () => {
+    const res = importAppData(pendingImport);
+    setImportResult(res);
+    setImportResultOpen(true);
+    setImportConfirmOpen(false);
+    setPendingImport('');
   };
 
   // True once the user has logged anything across any tracker.
@@ -425,6 +457,10 @@ export default function ProfileScreen() {
               <PrefRow icon={HelpCircle} label={t('profile.help')} onPress={onHelp} />
               <View style={{ height: 1, backgroundColor: colors.border }} />
               <PrefRow icon={Info} label={t('profile.about')} onPress={onAbout} />
+              <View style={{ height: 1, backgroundColor: colors.border }} />
+              <PrefRow icon={Download} label={t('backup.exportBackup')} onPress={onExportBackup} />
+              <View style={{ height: 1, backgroundColor: colors.border }} />
+              <PrefRow icon={Upload} label={t('backup.importBackup')} onPress={() => setImportOpen(true)} />
               {!hasAnyData ? (
                 <>
                   <View style={{ height: 1, backgroundColor: colors.border }} />
@@ -600,6 +636,32 @@ export default function ProfileScreen() {
         onConfirm={confirmLoadSample}
         onClose={() => setSampleOpen(false)}
       />
+      <BackupSheet
+        visible={importOpen}
+        onClose={() => setImportOpen(false)}
+        onSubmit={onSubmitImport}
+      />
+      <ConfirmSheet
+        visible={importConfirmOpen}
+        destructive={false}
+        title={t('backup.confirmTitle')}
+        body={t('backup.confirmBody')}
+        confirmLabel={t('backup.confirm')}
+        cancelLabel={t('profileMsg.cancel')}
+        onConfirm={confirmImport}
+        onClose={() => {
+          setImportConfirmOpen(false);
+          setPendingImport('');
+        }}
+      />
+      {importResult && (
+        <InfoSheet
+          visible={importResultOpen}
+          title={importResult.success ? t('common.done') : t('common.error')}
+          body={importResult.message}
+          onClose={() => setImportResultOpen(false)}
+        />
+      )}
     </Screen>
   );
 }

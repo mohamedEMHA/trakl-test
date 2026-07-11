@@ -56,3 +56,10 @@ bun.lockb
 _openrouter_comms.jsonl
 _project_metadata.jsonl
 .act-secrets.env
+
+# CI / act / npm log files
+act-*.log
+act-build*.log
+act-dryrun*.log
+npm-install*.log
+dryrun-output.log

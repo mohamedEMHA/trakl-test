@@ -117,7 +117,9 @@ export async function changeLanguage(code: string) {
     } catch (error) {
       // Reload may fail in Expo Go or dev builds; layout direction is still applied
       // but visual changes require a manual app restart.
-      console.warn('[i18n] Failed to reload app for RTL/LTR change:', error);
+      if (__DEV__) {
+        console.warn('[i18n] Failed to reload app for RTL/LTR change:', error);
+      }
     }
   }
 }

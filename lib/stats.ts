@@ -47,12 +47,12 @@ export function monthNet(transactions: Transaction[]): number {
 }
 
 export function budgetLeft(transactions: Transaction[], monthlyBudget: number): number {
-  return Math.max(0, Math.round(monthlyBudget - monthExpenses(transactions)));
+  return Math.round(monthlyBudget - monthExpenses(transactions));
 }
 
 /** number of habits completed today / total */
 export function habitsToday(habits: Habit[]): { done: number; total: number } {
-  const today = dayISO(0);
+  const today = dayISO(0).slice(0, 10);
   return {
     done: habits.filter((h) => h.completions[today]).length,
     total: habits.length,
@@ -199,7 +199,7 @@ export function expenseByCategory(
   transactions
     .filter((t) => t.kind === 'expense')
     .forEach((t) => map.set(t.category, (map.get(t.category) ?? 0) + t.amount));
-  return [...map.entries()]
+  return Array.from(map.entries())
     .map(([category, amount]) => ({ category, amount, color: categoryColor(category) }))
     .sort((a, b) => b.amount - a.amount);
 }
@@ -840,22 +840,22 @@ export function recurringCharges(transactions: Transaction[]): RecurringCharge[]
   }
 
   const out: RecurringCharge[] = [];
-  for (const list of groups.values()) {
+  for (const list of Array.from(groups.values())) {
     // Distinct year-month buckets this merchant was charged in.
     const months = new Set(
-      list.map((t) => {
+      list.map((t: Transaction) => {
         const d = new Date(t.date);
         return `${d.getFullYear()}-${d.getMonth()}`;
       }),
     );
     if (months.size < 2) continue;
 
-    const amounts = list.map((t) => t.amount).sort((a, b) => a - b);
+    const amounts = list.map((t: Transaction) => t.amount).sort((a: number, b: number) => a - b);
     const median = amounts[Math.floor(amounts.length / 2)];
     // Most common category for the merchant.
     const catCounts = new Map<string, number>();
     for (const t of list) catCounts.set(t.category, (catCounts.get(t.category) ?? 0) + 1);
-    const category = [...catCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    const category = Array.from(catCounts.entries()).sort((a, b) => b[1] - a[1])[0][0];
 
     out.push({
       merchant: list[0].merchant.trim(),

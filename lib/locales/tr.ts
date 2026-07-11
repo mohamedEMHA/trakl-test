@@ -1,6 +1,5 @@
-import type { Resources } from './en';
 
-export const tr: Resources = {
+export const tr = {
   tabs: { home: 'Ana Sayfa', trackers: 'Takipçiler', analytics: 'Analiz', profile: 'Profil' },
   common: {
     seeAll: 'Tümünü gör',

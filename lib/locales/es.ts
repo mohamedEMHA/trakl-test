@@ -1,6 +1,5 @@
-import type { Resources } from './en';
 
-export const es: Resources = {
+export const es = {
   tabs: { home: 'Inicio', trackers: 'Registros', analytics: 'Estadísticas', profile: 'Perfil' },
   common: {
     seeAll: 'Ver todo',

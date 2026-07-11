@@ -93,7 +93,7 @@ jobs:
           BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
           BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
           BILT_ANDROID_VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
-          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'com.yourcompany.yourapp' }}
+          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
         run: npx expo prebuild --platform android --clean --no-install
 
       - name: Cache Gradle (after prebuild so gradle files exist)
@@ -185,8 +185,12 @@ jobs:
           grep -q "^MYAPP_UPLOAD_KEY_ALIAS="      gradle.properties || echo "MYAPP_UPLOAD_KEY_ALIAS=${KEY_ALIAS}" >> gradle.properties
           grep -q "^MYAPP_UPLOAD_STORE_PASSWORD=" gradle.properties || echo "MYAPP_UPLOAD_STORE_PASSWORD=${KEYSTORE_PASSWORD}" >> gradle.properties
           grep -q "^MYAPP_UPLOAD_KEY_PASSWORD="   gradle.properties || echo "MYAPP_UPLOAD_KEY_PASSWORD=${KEY_PASSWORD}" >> gradle.properties
-          echo "---- gradle.properties (signing block) ----"
-          grep -E "^MYAPP_UPLOAD_" gradle.properties || true
+          echo "---- gradle.properties (signing configured) ----"
+          # Do NOT echo lines containing passwords — only confirm they exist.
+          grep -qE "^MYAPP_UPLOAD_STORE_FILE="     gradle.properties && echo "  MYAPP_UPLOAD_STORE_FILE: set"   || echo "  MYAPP_UPLOAD_STORE_FILE: MISSING"
+          grep -qE "^MYAPP_UPLOAD_KEY_ALIAS="      gradle.properties && echo "  MYAPP_UPLOAD_KEY_ALIAS: set"    || echo "  MYAPP_UPLOAD_KEY_ALIAS: MISSING"
+          grep -qE "^MYAPP_UPLOAD_STORE_PASSWORD=" gradle.properties && echo "  MYAPP_UPLOAD_STORE_PASSWORD: set" || echo "  MYAPP_UPLOAD_STORE_PASSWORD: MISSING"
+          grep -qE "^MYAPP_UPLOAD_KEY_PASSWORD="   gradle.properties && echo "  MYAPP_UPLOAD_KEY_PASSWORD: set"   || echo "  MYAPP_UPLOAD_KEY_PASSWORD: MISSING"
 
       - name: Patch app/build.gradle to use release signing config
         # Expo's prebuild template hard-codes `signingConfig signingConfigs.debug`
@@ -292,14 +296,28 @@ jobs:
           echo "Expected versionCode: ${{ steps.inputs.outputs.version_code }}"
           echo "Expected versionName: ${{ steps.inputs.outputs.version_name }}"
 
+      - name: Read previous versionCode from app.config.ts
+        id: previous_version
+        run: |
+          set -e
+          # Single source of truth: app.config.ts defines CURRENT_VERSION_CODE.
+          # The previously uploaded version is the current constant value.
+          PREVIOUS_MAX=$(grep -E '^const CURRENT_VERSION_CODE\s*=\s*[0-9]+' app.config.ts | grep -oE '[0-9]+' | head -1)
+          if [ -z "$PREVIOUS_MAX" ]; then
+            echo "::error::Could not read CURRENT_VERSION_CODE from app.config.ts"
+            exit 1
+          fi
+          echo "previous_max=$PREVIOUS_MAX" >> "$GITHUB_OUTPUT"
+          echo "Previous versionCode from app.config.ts: $PREVIOUS_MAX"
+
       - name: Validate versionCode is greater than previous release
         env:
           VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
+          PREVIOUS_MAX: ${{ steps.previous_version.outputs.previous_max }}
         run: |
           set -e
-          PREVIOUS_MAX=9
           if [ "${VERSION_CODE:-0}" -le "$PREVIOUS_MAX" ]; then
-            echo "::error::versionCode $VERSION_CODE is not greater than the previously uploaded version ($PREVIOUS_MAX). Update the workflow input to a value > $PREVIOUS_MAX."
+            echo "::error::versionCode $VERSION_CODE is not greater than the previously uploaded version ($PREVIOUS_MAX). Update the workflow input to a value > $PREVIOUS_MAX, and bump CURRENT_VERSION_CODE in app.config.ts."
             exit 1
           fi
           echo "OK: versionCode $VERSION_CODE > $PREVIOUS_MAX"

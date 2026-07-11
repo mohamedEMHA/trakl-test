@@ -6,8 +6,7 @@ import { ClashText, InterText } from '@/components/Typography';
 import { bannerUnitId, USE_TEST_ADS } from '@/lib/admobConfig';
 import { useColors } from '@/lib/theme';
 import { withAlpha } from '@/lib/trackers';
-import { getConsentStatus } from '@/lib/consent';
-import { ConsentSheet } from '@/components/ConsentSheet';
+import { getConsentStatus, requestAndShowConsent } from '@/lib/consent';
 
 // Platform-correct banner unit ID (Android unit on Android, iOS unit on iOS),
 // test unit in dev / production unit in release. See lib/admobConfig.ts.
@@ -67,18 +66,22 @@ export function AdBanner() {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [consentStatus, setConsentStatus] = useState<'unknown' | 'granted' | 'denied'>('unknown');
-  const [showConsentSheet, setShowConsentSheet] = useState(false);
 
   useEffect(() => {
     if (__DEV__) {
       console.log(`${LOG} unit in use:`, BANNER_UNIT_ID, USE_TEST_ADS ? '(TEST)' : '(PROD)');
     }
-    // Check consent status on mount
+    // Check cached consent status on mount. If unknown, trigger the
+    // official Google UMP SDK consent flow (which also handles ATT on iOS).
     void getConsentStatus().then((status) => {
-      setConsentStatus(status);
-      if (status === 'unknown') {
-        setShowConsentSheet(true);
+      if (status !== 'unknown') {
+        setConsentStatus(status);
+        return;
       }
+      // Trigger UMP consent flow — this shows the Google-rendered form.
+      void requestAndShowConsent().then((resolved) => {
+        setConsentStatus(resolved);
+      });
     });
   }, []);
 
@@ -93,7 +96,7 @@ export function AdBanner() {
         console.warn(`${LOG} running in Expo Go — native AdMob SDK unavailable. Use a dev build.`);
       }
       setFailed(true);
-      return undefined;
+      return;
     }
     let mounted = true;
     if (__DEV__) {
@@ -140,6 +143,7 @@ export function AdBanner() {
         }
         if (mounted) setFailed(true);
       });
+    // oxlint-disable-next-line typescript/consistent-return
     return () => {
       mounted = false;
     };
@@ -153,49 +157,40 @@ export function AdBanner() {
   const { BannerAd, BannerAdSize } = ads;
 
   return (
-    <>
-      <View
-        style={{
-          backgroundColor: colors.surface2,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-        }}
-        className="w-full items-center justify-center"
-      >
-        {/* Keep the styled placeholder visible until a real ad is loaded so the
-            area never appears blank while the request is in flight. */}
-        {!loaded && <PlaceholderBanner />}
-        {consentStatus === 'granted' && (
-          <BannerAd
-            unitId={BANNER_UNIT_ID}
-            size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-            onAdLoaded={() => {
-              if (__DEV__) {
-                console.log(`${LOG} ad loaded successfully ✅ (unit ${BANNER_UNIT_ID})`);
-              }
-              setLoaded(true);
-            }}
-            onAdFailedToLoad={(error: Error & { code?: string | number }) => {
-              if (__DEV__) {
-                console.warn(
-                  `${LOG} ad FAILED to load ❌ code=${error?.code ?? 'n/a'} message=${
-                    error?.message ?? 'n/a'
-                  }`,
-                );
-              }
-              setLoaded(false);
-              setFailed(true);
-            }}
-          />
-        )}
-      </View>
-      <ConsentSheet
-        visible={showConsentSheet}
-        onClose={(granted) => {
-          setShowConsentSheet(false);
-          setConsentStatus(granted ? 'granted' : 'denied');
-        }}
-      />
-    </>
+    <View
+      style={{
+        backgroundColor: colors.surface2,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+      }}
+      className="w-full items-center justify-center"
+    >
+      {/* Keep the styled placeholder visible until a real ad is loaded so the
+          area never appears blank while the request is in flight. */}
+      {!loaded && <PlaceholderBanner />}
+      {consentStatus === 'granted' && (
+        <BannerAd
+          unitId={BANNER_UNIT_ID}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+          onAdLoaded={() => {
+            if (__DEV__) {
+              console.log(`${LOG} ad loaded successfully ✅ (unit ${BANNER_UNIT_ID})`);
+            }
+            setLoaded(true);
+          }}
+          onAdFailedToLoad={(error: Error & { code?: string | number }) => {
+            if (__DEV__) {
+              console.warn(
+                `${LOG} ad FAILED to load ❌ code=${error?.code ?? 'n/a'} message=${
+                  error?.message ?? 'n/a'
+                }`,
+              );
+            }
+            setLoaded(false);
+            setFailed(true);
+          }}
+        />
+      )}
+    </View>
   );
 }

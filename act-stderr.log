@@ -1,8 +1,0 @@
-act.exe : time="2026-07-04T13:44:25-04:00" level=info msg="Using docker host 'npipe:////./pipe/docker_engine', and daem
-on socket 'npipe:////./pipe/docker_engine'"
-At C:\dev\trakl-test\scripts\run-act-build.ps1:15 char:1
-+ & $act workflow_dispatch `
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (time="2026-07-0...docker_engine'":String) [], RemoteException
-    + FullyQualifiedErrorId : NativeCommandError
- 

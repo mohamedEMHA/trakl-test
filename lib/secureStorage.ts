@@ -23,7 +23,9 @@ export async function saveTransactionsSecure(transactions: Transaction[]): Promi
       await SecureStore.setItemAsync(TRANSACTIONS_KEY, json);
     }
   } catch (error) {
-    console.warn('[SecureStorage] Failed to save transactions:', error);
+    if (__DEV__) {
+      console.warn('[SecureStorage] Failed to save transactions:', error);
+    }
     // Non-fatal: the app should continue to work even if secure storage fails
   }
 }
@@ -41,9 +43,13 @@ export async function getTransactionsSecure(): Promise<Transaction[] | null> {
       json = await SecureStore.getItemAsync(TRANSACTIONS_KEY);
     }
     if (!json) return null;
-    return JSON.parse(json) as Transaction[];
+    const parsed = JSON.parse(json) as unknown;
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+    return parsed as Transaction[];
   } catch (error) {
-    console.warn('[SecureStorage] Failed to retrieve transactions:', error);
+    if (__DEV__) {
+      console.warn('[SecureStorage] Failed to retrieve transactions:', error);
+    }
     return null;
   }
 }
@@ -58,6 +64,8 @@ export async function deleteTransactionsSecure(): Promise<void> {
       await SecureStore.deleteItemAsync(TRANSACTIONS_KEY);
     }
   } catch (error) {
-    console.warn('[SecureStorage] Failed to delete transactions:', error);
+    if (__DEV__) {
+      console.warn('[SecureStorage] Failed to delete transactions:', error);
+    }
   }
 }

@@ -1,6 +1,5 @@
-import type { Resources } from './en';
 
-export const ko: Resources = {
+export const ko = {
   tabs: { home: '홈', trackers: '트래커', analytics: '분석', profile: '프로필' },
   common: {
     seeAll: '모두 보기',

@@ -1,0 +1,138 @@
+name: iOS CI/CD (EAS)
+
+# EAS-based iOS build / submit. This requires:
+#   - EXPO_TOKEN in GitHub Secrets (Settings → Secrets → Actions).
+#   - Apple App Store Connect API key in GitHub Secrets:
+#       ASC_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY (base64 of the .p8 key).
+#   - The EAS project must be linked (extra.eas.projectId in app.config.ts).
+#
+# Trigger: manual (workflow_dispatch) or push to main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "EAS command"
+        type: choice
+        required: false
+        default: "build"
+        options:
+          - build
+          - submit
+      build_profile:
+        description: "EAS build profile"
+        type: choice
+        required: false
+        default: "production"
+        options:
+          - production
+          - preview
+          - development
+      version_name:
+        description: "iOS versionName (display string)"
+        type: string
+        required: false
+        default: "1.0.1"
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".github/**"
+
+env:
+  EXPO_NO_TELEMETRY: "1"
+  CI: "1"
+
+jobs:
+  ios-eas:
+    name: iOS EAS ${{ github.event.inputs.command || 'build' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate EAS token
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Missing EXPO_TOKEN secret. Add it in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "EXPO_TOKEN is set."
+
+      - name: Validate Apple credentials (build only)
+        if: github.event.inputs.command != 'submit'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+        run: |
+          missing=""
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_API_KEY; do
+            eval "val=\$$v"
+            if [ -z "$val" ]; then
+              missing="$missing $v"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing Apple credentials:$missing. Add them as GitHub Actions secrets."
+            exit 1
+          fi
+          echo "Apple credentials are set."
+
+      - name: Write ASC API key to disk
+        if: github.event.inputs.command != 'submit'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+        run: |
+          mkdir -p ~/.eas
+          echo "$ASC_API_KEY" | base64 -d > ~/.eas/asc-api-key.p8
+          chmod 600 ~/.eas/asc-api-key.p8
+
+      - name: Set up EAS CLI
+        run: npm install -g eas-cli@latest
+
+      - name: Build iOS on EAS
+        if: github.event.inputs.command != 'submit'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          BILT_APP_VERSION: ${{ github.event.inputs.version_name || '1.0.1' }}
+          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_PATH: ~/.eas/asc-api-key.p8
+        run: |
+          eas build --platform ios --profile ${{ github.event.inputs.build_profile || 'production' }} --non-interactive --no-wait
+
+      - name: Submit iOS to App Store
+        if: github.event.inputs.command == 'submit'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+        run: |
+          if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$ASC_API_KEY" ]; then
+            echo "::error::Missing Apple credentials for EAS submit."
+            exit 1
+          fi
+          mkdir -p ~/.eas
+          echo "$ASC_API_KEY" | base64 -d > ~/.eas/asc-api-key.p8
+          chmod 600 ~/.eas/asc-api-key.p8
+          eas submit --platform ios --profile ${{ github.event.inputs.build_profile || 'production' }} --non-interactive

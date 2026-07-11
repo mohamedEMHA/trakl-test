@@ -1,160 +1,58 @@
-# Welcome to your Bilt project
+# TRAKL
 
-[![Built with Bilt](https://img.shields.io/endpoint?url=https%3A%2F%2Fapp.bilt.me%2Fapi%2Fbadge)](https://bilt.me)
+A local-first life tracker app built with Expo / React Native. Track habits, tasks, finances, sleep, workouts, mood, water intake, weight, meditation, goals, and custom trackers — all stored on-device with Zustand + AsyncStorage. Available in 20 languages with AdMob banner ads (with GDPR/UMP consent).
 
-## Project info
+## Tech Stack
 
-**Preview URL**: https://app.bilt.me/project/2fca07a1-3e0d-4fcb-940e-816bf5b6f1aa/preview
+- **Framework**: Expo SDK 54, React Native 0.81
+- **State**: Zustand with AsyncStorage persistence (encrypted via expo-secure-store for financial data)
+- **Navigation**: Expo Router (file-based)
+- **Styling**: Uniwind / TailwindCSS
+- **i18n**: i18next (20 languages, RTL support)
+- **Ads**: react-native-google-mobile-ads (AdMob banners with UMP consent + ATT)
+- **Notifications**: expo-notifications (local scheduling)
+- **CI**: GitHub Actions (Android Gradle release builds)
 
-**Project ID**: `2fca07a1-3e0d-4fcb-940e-816bf5b6f1aa`
+## Getting Started
 
-## How can I edit this app?
+```bash
+# Install dependencies
+npm ci
 
-There are several ways of editing your application.
-
-**Use Bilt**
-
-Simply visit your [Bilt Project](https://app.bilt.me/agent/2fca07a1-3e0d-4fcb-940e-816bf5b6f1aa) and start sending messages. Describe what you want to change, add, or fix in natural language.
-
-Changes made via Bilt are instant - just send a message and your app updates.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can export the source code from Bilt and make changes directly.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Export and clone your Bilt project.
-# (Download source from Bilt or connect to your git repo)
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm install
-
-# Step 4: Start the Expo development server.
+# Start the dev server
 npx expo start
+
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
-Scan the QR code with Expo Go on your phone to see your app running locally.
+## Project Structure
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- React Native
-- Expo
-- TypeScript
-- AsyncStorage (local data persistence)
-- Expo Router (navigation)
-
-All generated automatically by Bilt from your natural language instructions.
-
-## How can I test this project?
-
-**Option 1: Instant Preview (Recommended)**
-
-Open the preview URL in your browser: `https://app.bilt.me/project/2fca07a1-3e0d-4fcb-940e-816bf5b6f1aa/preview`
-
-Scan the QR code with Expo Go ([iOS](https://apps.apple.com/app/expo-go/id982107779) | [Android](https://play.google.com/store/apps/details?id=host.exp.exponent)) on your phone.
-
-**Option 2: Run Locally**
-
-```sh
-npm install
-npx expo start
+```
+app/          # Expo Router pages (tabs, tracker screens)
+components/   # Reusable UI components
+lib/          # Store, i18n, consent, secure storage, stats, types
+hooks/        # Custom React hooks
+assets/       # Images, fonts, onboarding assets
+__tests__/    # Jest test files
 ```
 
-Then scan the QR code with Expo Go.
+## Key Files
 
-## How can I deploy this project?
+- `lib/store.ts` — Zustand store with persistence, migrations, and all actions
+- `lib/consent.ts` — GDPR/UMP consent via Google AdsConsent SDK
+- `lib/secureStorage.ts` — Encrypted storage for financial transactions
+- `lib/i18n.ts` — Internationalization with RTL layout direction
+- `app.config.ts` — Expo config (versioning, AdMob, permissions)
+- `.github/workflows/react-native-cicd.yml` — Android release CI/CD
 
-Go to your [Bilt Project](https://app.bilt.me/agent/2fca07a1-3e0d-4fcb-940e-816bf5b6f1aa), after that go to Settings -> App Store.
+## Privacy
 
-### Deploy with Bilt
+All user data is stored locally on-device. Financial transactions are encrypted at rest using expo-secure-store. No data is sent to any server. AdMob ads require GDPR/UMP consent (handled via the official Google UMP SDK) and iOS ATT prompt.
 
-Simply send a message to your Bilt project: "Deploy this app to production"
+## License
 
-Bilt will handle the build and provide you with download links or submission-ready builds.
-
-## How can I make changes to my app?
-
-**Via Bilt (Easiest)**
-
-Visit your [Bilt Project](https://app.bilt.me/agent/2fca07a1-3e0d-4fcb-940e-816bf5b6f1aa) and send a message describing what you want:
-
-- "Add a dark mode toggle"
-- "Change the button color to blue"
-- "Add a new screen for user settings"
-- "Fix the navigation bar spacing"
-
-Bilt understands natural language and updates your app automatically.
-
-**Via Code**
-
-Export the source, make changes in your IDE, and test locally with `npx expo start`.
-
-## Can I use this with the MCP protocol?
-
-Yes! Bilt is available as a remote MCP server at `https://mcp.bilt.me/mcp`.
-
-Connect any MCP-compatible AI agent (Claude Desktop, OpenClaw, etc.) to programmatically build and modify mobile apps.
-
-**Example MCP integration:**
-
-```json
-{
-  "mcpServers": {
-    "bilt": {
-      "transport": {
-        "type": "sse",
-        "url": "https://mcp.bilt.me/mcp/sse",
-        "headers": {
-          "Authorization": "Bearer YOUR_API_KEY"
-        }
-      }
-    }
-  }
-}
-```
-
-Read more:
-
-- [Bilt MCP Documentation](https://bilt.me/docs)
-- [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.buildingapplications%2Fmcp/versions/latest)
-
-## Need help?
-
-- 📚 [Bilt Documentation](https://bilt.me/docs)
-- 💬 [Discord Community](https://discord.gg/3FqNgmSYdZ)
-- 🐦 [Twitter Updates](https://twitter.com/biltmeanapp)
-- 📧 Email: support@bilt.me
-
----
-
-<div align="center">
-
-**Built by AI. No code required.** ✨
-
-[Try Bilt](https://bilt.me) • [View Docs](https://bilt.me/docs) • [Docs MCP Server](https://bilt.me/docs/mcp)
-
-</div>
+Private project. All rights reserved.

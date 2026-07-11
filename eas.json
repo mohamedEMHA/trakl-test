@@ -15,10 +15,20 @@
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
+      },
+      "ios": {
+        "buildType": "release"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "track": "production"
+      },
+      "ios": {
+        "ascApp": "trakl"
+      }
+    }
   }
 }

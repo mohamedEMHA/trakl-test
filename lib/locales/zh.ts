@@ -1,6 +1,5 @@
-import type { Resources } from './en';
 
-export const zh: Resources = {
+export const zh = {
   tabs: { home: '主页', trackers: '追踪', analytics: '分析', profile: '我的' },
   common: {
     seeAll: '查看全部',

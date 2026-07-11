@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { renderHook, act } from '@testing-library/react-native';
 import { useTrakl } from '@/lib/store';
+import { createBackup } from '@/lib/backup';
 
 function resetData() {
   return {
@@ -173,5 +174,40 @@ describe('Store: Profile', () => {
     });
 
     expect(result.current.monthlyBudget).toBe(2000);
+  });
+
+  it('should import a backup and restore state', () => {
+    const { result } = renderHook(() => useTrakl());
+
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+    const backup = createBackup({
+      ...result.current,
+      profile: { ...result.current.profile, name: 'Imported User' },
+      monthlyBudget: 1234,
+      transactions: [
+        { id: 'tx1', kind: 'income', amount: 500, merchant: 'Gift', category: 'Income', date: '2024-01-01' },
+      ],
+    } as unknown as Parameters<typeof createBackup>[0]);
+
+    act(() => {
+      result.current.importAppData(backup);
+    });
+
+    expect(result.current.profile.name).toBe('Imported User');
+    expect(result.current.monthlyBudget).toBe(1234);
+    expect(result.current.transactions).toHaveLength(1);
+    expect(result.current.transactions[0].merchant).toBe('Gift');
+  });
+
+  it('should reject an invalid backup import', () => {
+    const { result } = renderHook(() => useTrakl());
+
+    let res: { success: boolean; message: string } = { success: true, message: '' };
+    act(() => {
+      res = result.current.importAppData('not-valid');
+    });
+
+    expect(res.success).toBe(false);
+    expect(res.message).toMatch(/not valid JSON/);
   });
 });

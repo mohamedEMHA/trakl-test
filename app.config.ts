@@ -5,6 +5,7 @@ type ExpoPlugins = NonNullable<ExpoConfig['plugins']>;
 const CURRENT_VERSION_CODE = 9;
 
 function requireEnv(name: string, fallback: string): string {
+  // oxlint-disable-next-line expo/no-dynamic-env-var
   const value = process.env[name];
   if (process.env.CI === '1' || process.env.CI === 'true') {
     if (!value) {
@@ -100,6 +101,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           //   ios:     ca-app-pub-3940256099942544~1458002511
           androidAppId: 'ca-app-pub-4918095220813645~5762692634',
           iosAppId: 'ca-app-pub-4918095220813645~1685670652',
+          // Delay app measurement until consent is obtained (required for EEA).
+          delayAppMeasurementInit: true,
         },
       ],
       ...nativePlugins,

@@ -1,3 +1,5 @@
+import type { ParseKeys } from 'i18next';
+
 import type {
   Achievement,
   AppNotification,
@@ -16,7 +18,7 @@ import type {
 } from './types';
 
 /** A minimal translate function compatible with i18next's `t`. */
-type T = (key: string) => string;
+type T = (key: ParseKeys) => string;
 
 /** ISO date (no time) offset from today by `days`. */
 export function dayISO(offset = 0): string {

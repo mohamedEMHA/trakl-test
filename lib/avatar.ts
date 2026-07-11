@@ -53,20 +53,24 @@ export async function pickAvatarImage(): Promise<string | null> {
     return pickedUri;
   }
 
-  // On native, copy to app's cache directory for persistence
+  // On native, copy to app's document directory for persistence (cache
+  // directory can be cleared by the OS at any time, causing the avatar to
+  // silently disappear).
   try {
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-member-access -- expo-file-system types incomplete
-    const cacheDir = (FileSystem as Record<string, unknown>).cacheDirectory as string | undefined;
-    if (!cacheDir) return pickedUri; // Fallback if cacheDirectory is unavailable
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+    const docDir = (FileSystem as { documentDirectory?: string }).documentDirectory;
+    if (!docDir) return pickedUri; // Fallback if documentDirectory is unavailable
     const filename = `avatar-${Date.now()}.jpg`;
-    const persistedUri = `${cacheDir}${filename}`;
+    const persistedUri = `${docDir}${filename}`;
     await FileSystem.copyAsync({
       from: pickedUri,
       to: persistedUri,
     });
     return persistedUri;
   } catch (error) {
-    console.warn('[Avatar] Failed to persist image, using original URI:', error);
+    if (__DEV__) {
+      console.warn('[Avatar] Failed to persist image, using original URI:', error);
+    }
     return pickedUri; // Fallback to original URI if copy fails
   }
 }

@@ -4,7 +4,8 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { TrackerKey } from './trackers';
-import { saveTransactionsSecure, getTransactionsSecure, deleteTransactionsSecure } from './secureStorage';
+import { saveTransactionsSecure, deleteTransactionsSecure } from './secureStorage';
+import { createBackup, parseBackup } from './backup';
 import type {
   Achievement,
   AppNotification,
@@ -104,6 +105,8 @@ interface TraklState {
   }) => void;
   loadSampleData: () => void;
   clearAllData: () => void;
+  exportAppData: () => string;
+  importAppData: (json: string) => { success: boolean; message: string };
   setEnabledTrackers: (keys: TrackerKey[]) => void;
   toggleTracker: (key: TrackerKey) => void;
   togglePinTracker: (key: TrackerKey) => void;
@@ -169,9 +172,9 @@ const id = () => Math.random().toString(36).slice(2, 10);
 /** Translate a sample-data key in the currently-active language.
  *  Uses a translator explicitly bound to the resolved language so the seed
  *  strings can never fall back to English due to load timing. */
-const sampleT = (key: string) => {
+const sampleT = (key: ParseKeys) => {
   const lng = i18n.resolvedLanguage ?? i18n.language ?? 'en';
-  return i18n.getFixedT(lng)(key as ParseKeys);
+  return i18n.getFixedT(lng)(key);
 };
 
 /** All the seed/demo content, used by the optional "Try with sample data" flow.
@@ -218,7 +221,7 @@ const EMPTY_DATA = {
 
 export const useTrakl = create<TraklState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       hydrated: false,
       rehydrateFailed: false,
       onboarded: false,
@@ -260,9 +263,53 @@ export const useTrakl = create<TraklState>()(
           ...(sampleData ? buildSampleData() : EMPTY_DATA),
         })),
 
-      loadSampleData: () => set({ ...buildSampleData() }),
+      loadSampleData: () => {
+        const data = buildSampleData();
+        void saveTransactionsSecure(data.transactions);
+        set({ ...data });
+      },
 
-      clearAllData: () => set({ ...EMPTY_DATA, pinnedTrackers: [], monthlyBudget: 0 }),
+      clearAllData: () => {
+        void deleteTransactionsSecure();
+        set({ ...EMPTY_DATA, pinnedTrackers: [], monthlyBudget: 0 });
+      },
+
+      exportAppData: () => createBackup(get()),
+
+      importAppData: (json) => {
+        const result = parseBackup(json);
+        if (!result.ok) {
+          return { success: false, message: result.error };
+        }
+        const data = result.data;
+        set({
+          onboarded: true,
+          hydrated: true,
+          rehydrateFailed: false,
+          enabledTrackers: data.enabledTrackers,
+          pinnedTrackers: data.pinnedTrackers,
+          profile: data.profile,
+          transactions: data.transactions,
+          habits: data.habits,
+          tasks: data.tasks,
+          goals: data.goals,
+          planner: data.planner,
+          sleep: data.sleep,
+          workouts: data.workouts,
+          mood: data.mood,
+          water: data.water,
+          weight: data.weight,
+          meditation: data.meditation,
+          customTrackers: data.customTrackers,
+          notifications: data.notifications,
+          achievements: data.achievements,
+          monthlyBudget: data.monthlyBudget,
+          notificationsEnabled: data.notificationsEnabled,
+          waterGoal: data.waterGoal,
+        });
+        void saveTransactionsSecure(data.transactions);
+        return { success: true, message: 'Backup restored successfully.' };
+      },
 
       setEnabledTrackers: (keys) => set({ enabledTrackers: keys }),
 
@@ -284,19 +331,32 @@ export const useTrakl = create<TraklState>()(
 
       setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
 
-      setMonthlyBudget: (budget) => set({ monthlyBudget: Math.max(0, Math.round(budget)) }),
+      setMonthlyBudget: (budget) =>
+        set({ monthlyBudget: Math.min(10_000_000, Math.max(0, Math.round(budget))) }),
 
       addTransaction: (tx) =>
-        set((s) => ({ transactions: [{ ...tx, id: id() }, ...s.transactions] })),
+        set((s) => {
+          // Clamp amount to a sane range (0.01 – 10M) to guard against
+          // malformed inputs from UI or corrupted state.
+          const amount = Math.min(10_000_000, Math.max(0.01, tx.amount || 0.01));
+          const transactions = [{ ...tx, amount, id: id() }, ...s.transactions];
+          // Sync sensitive financial data to encrypted storage (non-blocking).
+          void saveTransactionsSecure(transactions);
+          return { transactions };
+        }),
 
       deleteTransaction: (tid) =>
-        set((s) => ({ transactions: s.transactions.filter((t) => t.id !== tid) })),
+        set((s) => {
+          const transactions = s.transactions.filter((t) => t.id !== tid);
+          void saveTransactionsSecure(transactions);
+          return { transactions };
+        }),
 
       toggleHabitToday: (hid) =>
         set((s) => ({
           habits: s.habits.map((h) => {
             if (h.id !== hid) return h;
-            const today = dayISO(0);
+            const today = dayISO(0).slice(0, 10);
             const completions = { ...h.completions };
             if (completions[today]) delete completions[today];
             else completions[today] = true;
@@ -423,7 +483,7 @@ export const useTrakl = create<TraklState>()(
       addWeight: (kg) =>
         set((s) => ({
           weight: [
-            { id: id(), kg: Math.round(kg * 10) / 10, date: new Date().toISOString() },
+            { id: id(), kg: Math.min(500, Math.max(0.1, Math.round(kg * 10) / 10)), date: new Date().toISOString() },
             ...s.weight,
           ],
         })),
@@ -450,7 +510,7 @@ export const useTrakl = create<TraklState>()(
             c.id === trackerId
               ? {
                   ...c,
-                  logs: [{ id: id(), value, date: new Date().toISOString() }, ...(c.logs ?? [])],
+                  logs: [{ id: id(), value: Math.min(1_000_000, Math.max(-1_000_000, value || 0)), date: new Date().toISOString() }, ...(c.logs ?? [])],
                 }
               : c,
           ),
@@ -469,7 +529,8 @@ export const useTrakl = create<TraklState>()(
       markAllNotificationsRead: () =>
         set((s) => ({ notifications: s.notifications.map((n) => ({ ...n, read: true })) })),
 
-      resetApp: () =>
+      resetApp: () => {
+        void deleteTransactionsSecure();
         set({
           onboarded: false,
           profile: defaultProfile,
@@ -479,7 +540,8 @@ export const useTrakl = create<TraklState>()(
           monthlyBudget: MONTHLY_BUDGET,
           notificationsEnabled: true,
           waterGoal: WATER_GOAL,
-        }),
+        });
+      },
     }),
     {
       name: 'trakl-store-v1',
@@ -537,12 +599,12 @@ export const useTrakl = create<TraklState>()(
             });
           }
           // Backfill the four new tracker data slices (mood/water/weight/
-          // meditation) for stores persisted before they existed, and seed them
-          // with demo data so the new screens aren't empty on first upgrade.
-          if (!Array.isArray(record.mood)) record.mood = buildMood(sampleT);
-          if (!Array.isArray(record.water)) record.water = seedWater;
-          if (!Array.isArray(record.weight)) record.weight = seedWeight;
-          if (!Array.isArray(record.meditation)) record.meditation = buildMeditation(sampleT);
+          // meditation) for stores persisted before they existed. Initialize
+          // with empty arrays — never inject demo data into existing users.
+          if (!Array.isArray(record.mood)) record.mood = [];
+          if (!Array.isArray(record.water)) record.water = [];
+          if (!Array.isArray(record.weight)) record.weight = [];
+          if (!Array.isArray(record.meditation)) record.meditation = [];
           // Enable the new trackers for existing users who already passed
           // onboarding (append any that aren't already in their enabled list).
           if (Array.isArray(record.enabledTrackers)) {
