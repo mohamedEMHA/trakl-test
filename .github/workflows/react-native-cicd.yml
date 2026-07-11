@@ -332,11 +332,21 @@ jobs:
 
       - name: Build Release AAB
         working-directory: android
+        env:
+          BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
+          BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
+          BILT_ANDROID_VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
+          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
         run: ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Build Release APK (only when requested)
         if: github.event.inputs.build_type == 'release-apk'
         working-directory: android
+        env:
+          BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
+          BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
+          BILT_ANDROID_VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
+          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: List built artifacts
