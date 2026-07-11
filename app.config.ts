@@ -2,7 +2,7 @@ import type { ConfigContext, ExpoConfig } from '@expo/config';
 
 type ExpoPlugins = NonNullable<ExpoConfig['plugins']>;
 
-const CURRENT_VERSION_CODE = 9;
+const CURRENT_VERSION_CODE = 10;
 
 function requireEnv(name: string, fallback: string): string {
   // oxlint-disable-next-line expo/no-dynamic-env-var
