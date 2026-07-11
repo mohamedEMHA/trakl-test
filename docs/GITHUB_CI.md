@@ -72,10 +72,26 @@ git push origin main
 
 > ⚠️ **Τα παραπάνω credentials είναι hard-coded για ευκολία.** Σε production, βάλε τα σε environment-scoped secrets ή rotate τακτικά. Το `MYAPP_UPLOAD_KEY_PASSWORD` και `MYAPP_UPLOAD_STORE_PASSWORD` στο `gradle.properties` πρέπει να **αφαιρεθούν** πριν το commit για production (βλ. "Security hardening" παρακάτω).
 
+### 3b. Βάλε τα 2 configuration variables στο GitHub
+
+`GitHub repo → Settings → Secrets and variables → Actions → Variables tab → New repository variable`
+
+| Variable name          | Value                                                           |
+|------------------------|-----------------------------------------------------------------|
+| `BILT_ANDROID_PACKAGE` | Το πραγματικό application ID από Play Console, π.χ. `trakl.app` |
+| `BILT_IOS_BUNDLE_ID`   | Το iOS bundle identifier, π.χ. `com.yourcompany.trakl`          |
+
+> Αν δεν οριστούν, το workflow χρησιμοποιεί τις προεπιλογές `trakl.app` και `com.yourcompany.yourapp`. Αυτές **δεν πρέπει** να φτάσουν στο Play Console αν το app σου έχει άλλο package name — θα δεις το σφάλμα "οι υπάρχοντες χρήστες δεν μπορούν να κάνουν αναβάθμιση".
+
 ### 4. Trigger
 
-- **Manual**: `Actions → React Native CI/CD (Android Release) → Run workflow → release-aab`
+- **Manual**: `Actions → React Native CI/CD (Android Release) → Run workflow`
+  - `build_type`: `release-aab` (προεπιλογή) ή `release-apk`
+  - `version_code`: **πρέπει να είναι μεγαλύτερο από τον προηγούμενο** κωδικό στο Play Console. Η προεπιλογή είναι `9` επειδή ο πιο πρόσφατος που έχει ανέβει είναι `8`.
+  - `version_name`: όνομα έκδοσης, π.χ. `1.0.1`
 - **Auto**: push στο `main` (εκτός `*.md`/`docs/**`/`.github/**`)
+
+> Σιγουρέψου ότι έχεις ορίσει το `BILT_ANDROID_PACKAGE` variable πριν το πρώτο release, αλλιώς το Play Console θα δει άλλο application ID και θα απορρίψει το upload.
 
 ### 5. Download το .aab
 
@@ -87,27 +103,31 @@ Upload στο Google Play Console → App releases → Internal testing / Produc
 
 | Βήμα | Τι κάνει |
 |------|----------|
-| 1. Checkout | Pulls τον κώδικα |
-| 2. Setup JDK 17 | Temurin JDK 17 + Gradle cache |
-| 3. Setup Node 20 | Node.js 20 + npm cache |
-| 4. Setup Android SDK | API 35, build-tools 35.0.0, NDK 26.1.10909125 |
-| 5. Gradle cache | ~/.gradle/caches + wrapper |
+| 1. Resolve inputs | Υπολογίζει versionCode/versionName με ασφαλείς προεπιλογές |
+| 2. Checkout | Pulls τον κώδικα |
+| 3. Setup JDK 17 | Temurin JDK 17 + Gradle cache |
+| 4. Setup Node 20 | Node.js 20 + npm cache |
+| 5. Setup Android SDK | API 35, build-tools 35.0.0, NDK 26.1.10909125 |
 | 6. `npm ci` | Clean install από package-lock.json |
 | 7. `npx expo prebuild --platform android --clean --no-install` | Regenerate android/ folder από app.config.ts |
 | 8. Decode keystore | Base64 secret → `android/app/upload-keystore.p12` |
-| 9. `keytool` p12→jks | Convert σε JKS για clean Gradle signing |
+| 9. `keytool` p12→jks | Convert σε JKS + εκτύπωση SHA1 για Play Console |
 | 10. Patch gradle.properties | Set MYAPP_UPLOAD_* (file, alias, passwords) |
-| 11. `./gradlew bundleRelease` | Κυρίως build — παράγει .aab |
-| 12. Upload AAB artifact | `app-release.aab` (30-day retention) |
-| 13. Upload mapping | `mapping.txt` για Play Console deobfuscation |
+| 11. Verify versionCode/applicationId | Επιβεβαιώνει ότι το versionCode είναι > 8 |
+| 12. `./gradlew bundleRelease` | Κυρίως build — παράγει .aab |
+| 13. Verify AAB signing | Εκτυπώνει SHA1 του .aab για σύγκριση με Play Console |
+| 14. Upload AAB artifact | `app-release.aab` (30-day retention) |
+| 15. Upload mapping | `mapping.txt` για Play Console deobfuscation |
 
 ## Trigger inputs
 
-`workflow_dispatch` έχει ένα input:
+`workflow_dispatch` έχει τα εξής inputs:
 
 - `build_type`:
   - `release-aab` (default) — μόνο .aab
   - `release-apk` — .aab **+** .apk (πιο αργό)
+- `version_code` (default `9`) — Android `versionCode`, πρέπει να είναι μεγαλύτερο από τον προηγούμενο στο Play Console.
+- `version_name` (default `1.0.1`) — Android `versionName`, το string που βλέπουν οι χρήστες.
 
 ## Troubleshooting
 
@@ -136,6 +156,39 @@ JDK 17 δεν εγκαταστάθηκε σωστά. Έλεγξε ότι `setup-
 - name: Write local.properties
   run: echo "sdk.dir=$ANDROID_HOME" >> android/local.properties
 ```
+
+### ❌ Play Console: "Δεν μπορείτε να διαθέσετε αυτή την έκδοση, επειδή δεν επιτρέπει στους υπάρχοντες χρήστες να κάνουν αναβάθμιση..."
+
+Αυτό σχεδόν πάντα σημαίνει ότι το νέο .aab δεν είναι συμβατό με την υπάρχουσα κυκλοφορία. Έλεγξε με σειρά:
+
+1. **applicationId / package name**
+   - Το workflow τυπώνει το `applicationId` από το `app/build.gradle`.
+   - Πρέπει να είναι ίδιο με το app που ήδη υπάρχει στο Play Console.
+   - Ορίζεται από το variable `BILT_ANDROID_PACKAGE` στο GitHub.
+
+2. **versionCode**
+   - Πρέπει να είναι **μεγαλύτερο** από τον τελευταίο κωδικό στο Play Console.
+   - Οι προειδοποιήσεις αναφέρουν version codes `1` και `8`, άρα η νέα έκδοση πρέπει να είναι `> 8`.
+
+3. **Signing certificate SHA1 (πιο συχνή αιτία)**
+   - Το workflow τυπώνει το SHA1 του upload certificate.
+   - Σύγκρινέ το με: `Play Console → App integrity → App signing → Upload key certificate → SHA-1 certificate fingerprint`.
+   - Αν διαφέρει, δημιούργησε νέο upload key request στο Play Console ή χρησιμοποίησε το αρχικό keystore.
+
+4. **Τοπικός έλεγχος του .aab**
+   ```powershell
+   powershell -File scripts\_verify-aab-play-ready.ps1 -AabPath C:\Users\moham\Downloads\app-release-aab\app-release.aab
+   ```
+
+### ⚠️ Play Console: "Δεν υπάρχει αρχείο απεμπλοκής που να συσχετίζεται με το App Bundle"
+
+Αυτό είναι warning, όχι error. Για να το διορθώσεις:
+
+1. Κατέβασε το artifact `android-mapping` από το Actions run.
+2. Περιέχει το `mapping.txt`.
+3. Στο Play Console πήγαινε: `Release → Deobfuscation files → Upload` και ανέβασε το `mapping.txt`.
+
+> Το `mapping.txt` παράγεται μόνο όταν το release build τρέχει με `minifyEnabled true` (προεπιλογή του Expo release template).
 
 ## Security hardening (προαιρετικό, προτείνεται)
 

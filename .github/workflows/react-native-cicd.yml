@@ -16,6 +16,16 @@ on:
         options:
           - release-aab
           - release-apk
+      version_code:
+        description: "Android versionCode (must be > 8, the latest previously uploaded code)"
+        type: number
+        required: false
+        default: 9
+      version_name:
+        description: "Android versionName (display string)"
+        type: string
+        required: false
+        default: "1.0.1"
   push:
     branches: [main, master]
     paths-ignore:
@@ -66,10 +76,24 @@ jobs:
           build-tools-version: 35.0.0
           ndk-version: 26.1.10909125
 
+      - name: Resolve build inputs
+        id: inputs
+        run: |
+          VERSION_CODE="${{ github.event.inputs.version_code }}"
+          VERSION_NAME="${{ github.event.inputs.version_name }}"
+          echo "version_code=${VERSION_CODE:-9}" >> "$GITHUB_OUTPUT"
+          echo "version_name=${VERSION_NAME:-1.0.1}" >> "$GITHUB_OUTPUT"
+          echo "Resolved: versionCode=${VERSION_CODE:-9}, versionName=${VERSION_NAME:-1.0.1}"
+
       - name: Install dependencies
         run: npm ci
 
       - name: Generate Android project (expo prebuild)
+        env:
+          BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
+          BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
+          BILT_ANDROID_VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
+          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'com.yourcompany.yourapp' }}
         run: npx expo prebuild --platform android --clean --no-install
 
       - name: Cache Gradle (after prebuild so gradle files exist)
@@ -118,6 +142,9 @@ jobs:
             exit 1
           fi
           echo "Source alias detected: $SRC_ALIAS"
+          echo "---- upload certificate SHA1 (compare with Play Console) ----"
+          keytool -list -v -keystore upload-keystore.p12 -storetype PKCS12 -storepass "$KEYSTORE_PASSWORD" -noprompt 2>/dev/null \
+            | grep -i "SHA1:" || true
           keytool -importkeystore \
             -srckeystore upload-keystore.p12 \
             -srcstoretype PKCS12 \
@@ -166,6 +193,11 @@ jobs:
         # in the release block, which signs release builds with the debug key.
         # We rewrite the signingConfigs and release buildType so the release
         # build is signed with the upload key from MYAPP_UPLOAD_*.
+        # We also patch versionCode/versionName to the values from workflow inputs,
+        # because the prebuild template hardcodes them to 1 / 1.0.0.
+        env:
+          VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
+          VERSION_NAME: ${{ steps.inputs.outputs.version_name }}
         working-directory: android
         run: |
           set -e
@@ -174,21 +206,24 @@ jobs:
             echo "Release signing already wired in build.gradle, skipping patch"
           else
             python3 - <<'PY'
-          import re, pathlib
+          import os, re, pathlib
           p = pathlib.Path("app/build.gradle")
           s = p.read_text()
 
+          version_code = os.environ.get("VERSION_CODE", "2")
+          version_name = os.environ.get("VERSION_NAME", "1.0.1")
+
           # 1. Inject variable definitions + `hasReleaseSigning` right after
           #    the `apply plugin: "com.facebook.react"` line so they're in scope.
-          var_block = '''
+          var_block = f'''
           // --- Release signing (injected by CI workflow) ---
           def uploadStoreFile     = findProperty('MYAPP_UPLOAD_STORE_FILE')
           def uploadKeyAlias      = findProperty('MYAPP_UPLOAD_KEY_ALIAS')
           def uploadStorePassword = findProperty('MYAPP_UPLOAD_STORE_PASSWORD')
           def uploadKeyPassword   = findProperty('MYAPP_UPLOAD_KEY_PASSWORD')
-          def hasReleaseSigning   = [uploadStoreFile, uploadKeyAlias, uploadStorePassword, uploadKeyPassword].every {
+          def hasReleaseSigning   = [uploadStoreFile, uploadKeyAlias, uploadStorePassword, uploadKeyPassword].every {{
               it != null && !it.toString().trim().isEmpty()
-          }
+          }}
           // -----------------------------------------------
           '''
           s = re.sub(
@@ -232,13 +267,42 @@ jobs:
               count=1,
           )
 
+          # 4. Bump versionCode / versionName from the (hardcoded) template values
+          #    to the values supplied by the workflow input. Each release must
+          #    have a versionCode greater than the previously uploaded one.
+          s, n1 = re.subn(r'versionCode\s+\d+', f'versionCode {version_code}', s, count=1)
+          s, n2 = re.subn(r'versionName\s+"[^"]*"', f'versionName "{version_name}"', s, count=1)
+          print(f"Patched versionCode (replacements={n1}) and versionName (replacements={n2})")
+
           p.write_text(s)
           print("---- patched app/build.gradle (signing region) ----")
           for i, line in enumerate(s.splitlines(), 1):
-              if 1 <= i <= 8 or 95 <= i <= 145 or "signing" in line.lower() or "hasReleaseSigning" in line:
+              if 1 <= i <= 8 or 95 <= i <= 145 or "signing" in line.lower() or "hasReleaseSigning" in line or "versionCode" in line or "versionName" in line:
                   print(f"{i:3}: {line}")
           PY
           fi
+
+      - name: Verify versionCode in build.gradle
+        working-directory: android
+        run: |
+          set -e
+          echo "---- versionCode / versionName / applicationId in build.gradle ----"
+          grep -E "^\s*versionCode|^\s*versionName|applicationId" app/build.gradle || true
+          echo ""
+          echo "Expected versionCode: ${{ steps.inputs.outputs.version_code }}"
+          echo "Expected versionName: ${{ steps.inputs.outputs.version_name }}"
+
+      - name: Validate versionCode is greater than previous release
+        env:
+          VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
+        run: |
+          set -e
+          PREVIOUS_MAX=8
+          if [ "${VERSION_CODE:-0}" -le "$PREVIOUS_MAX" ]; then
+            echo "::error::versionCode $VERSION_CODE is not greater than the previously uploaded version ($PREVIOUS_MAX). Update the workflow input to a value > $PREVIOUS_MAX."
+            exit 1
+          fi
+          echo "OK: versionCode $VERSION_CODE > $PREVIOUS_MAX"
 
       - name: Make gradlew executable
         working-directory: android
@@ -260,6 +324,21 @@ jobs:
           echo "---- APK ----"
           find android/app/build/outputs/apk -name "*.apk" -type f -exec ls -la {} \; 2>/dev/null || echo "No APK (only built when build_type=release-apk)"
 
+      - name: Verify AAB signing certificate
+        run: |
+          set -e
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          EXTRACT_DIR=$(mktemp -d)
+          unzip -q "$AAB" -d "$EXTRACT_DIR"
+          RSA=$(find "$EXTRACT_DIR" -path "*/META-INF/*.RSA" -o -path "*/META-INF/*.DSA" -o -path "*/META-INF/*.EC" | head -n 1)
+          if [ -z "$RSA" ]; then
+            echo "::warning::No signing certificate found in AAB META-INF"
+          else
+            echo "---- AAB signing certificate SHA1 (compare with Play Console upload cert) ----"
+            keytool -printcert -file "$RSA" | grep -i "SHA1:" || true
+          fi
+          rm -rf "$EXTRACT_DIR"
+
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
@@ -277,6 +356,15 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+      - name: Verify mapping file exists
+        run: |
+          MAPPING=android/app/build/outputs/mapping/release/mapping.txt
+          if [ -f "$MAPPING" ]; then
+            echo "OK: mapping file found at $MAPPING ($(wc -l < "$MAPPING") lines)"
+          else
+            echo "::warning::R8/ProGuard mapping.txt not found at $MAPPING. Upload this file to Play Console under Release > Deobfuscation files to fix stack traces."
+          fi
+
       - name: Upload mapping files (for Play Console deobfuscation)
         if: success()
         uses: actions/upload-artifact@v4
@@ -284,5 +372,5 @@ jobs:
           name: android-mapping
           path: |
             android/app/build/outputs/mapping/release/mapping.txt
-          if-no-files-found: ignore
+          if-no-files-found: warn
           retention-days: 30

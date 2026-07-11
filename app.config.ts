@@ -2,11 +2,31 @@ import type { ConfigContext, ExpoConfig } from '@expo/config';
 
 type ExpoPlugins = NonNullable<ExpoConfig['plugins']>;
 
+function requireEnv(name: string, fallback: string): string {
+  const value = process.env[name];
+  if (process.env.CI === '1' || process.env.CI === 'true') {
+    if (!value) {
+      throw new Error(`Missing required CI environment variable: ${name}`);
+    }
+    return value;
+  }
+  return value ?? fallback;
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const nativePlugins: ExpoPlugins =
     process.env.EXPO_PLATFORM === 'native'
       ? [['expo-dev-client', { launchMode: 'most-recent' }], 'react-native-maps']
       : [];
+
+  const appVersion = requireEnv('BILT_APP_VERSION', '1.0.0');
+  const androidPackage = requireEnv('BILT_ANDROID_PACKAGE', 'trakl.app');
+  const iosBundleId = requireEnv('BILT_IOS_BUNDLE_ID', 'com.yourcompany.yourapp');
+  const androidVersionCode = Number(requireEnv('BILT_ANDROID_VERSION_CODE', '2'));
+
+  if (!Number.isInteger(androidVersionCode) || androidVersionCode <= 0) {
+    throw new Error(`Invalid BILT_ANDROID_VERSION_CODE: ${androidVersionCode}. Must be a positive integer.`);
+  }
 
   return {
     ...config,
@@ -14,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: 'TRAKL',
     slug: 'trakl',
     newArchEnabled: true,
-    version: process.env.BILT_APP_VERSION ?? '1.0.0',
+    version: appVersion,
     orientation: 'portrait',
     userInterfaceStyle: 'automatic',
     scheme: 'trakl',
@@ -28,11 +48,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         ITSAppUsesNonExemptEncryption: false,
       },
       supportsTablet: true,
-      bundleIdentifier: process.env.BILT_IOS_BUNDLE_ID ?? 'com.yourcompany.yourapp',
+      bundleIdentifier: iosBundleId,
     },
     android: {
-      package: process.env.BILT_ANDROID_PACKAGE ?? 'trakl.app',
-      versionCode: 1,
+      package: androidPackage,
+      // Bump on every Play Console release (must be > previously uploaded versionCode).
+      versionCode: androidVersionCode,
       permissions: ['com.google.android.gms.permission.AD_ID'],
     },
     extra: {
