@@ -80,9 +80,14 @@ jobs:
         run: |
           VERSION_CODE="${{ github.event.inputs.version_code }}"
           VERSION_NAME="${{ github.event.inputs.version_name }}"
-          echo "version_code=${VERSION_CODE:-10}" >> "$GITHUB_OUTPUT"
+          # Auto-increment from app.config.ts CURRENT_VERSION_CODE when no explicit input is given
+          if [ -z "$VERSION_CODE" ]; then
+            BASE=$(grep -oE 'CURRENT_VERSION_CODE\s*=\s*[0-9]+' app.config.ts | grep -oE '[0-9]+' | head -1)
+            VERSION_CODE=$((BASE + 1))
+          fi
+          echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
           echo "version_name=${VERSION_NAME:-1.0.1}" >> "$GITHUB_OUTPUT"
-          echo "Resolved: versionCode=${VERSION_CODE:-10}, versionName=${VERSION_NAME:-1.0.1}"
+          echo "Resolved: versionCode=${VERSION_CODE}, versionName=${VERSION_NAME:-1.0.1}"
 
       - name: Install dependencies
         run: npm ci
