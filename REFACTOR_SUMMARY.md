@@ -137,8 +137,23 @@ All changes verified with:
 
 ---
 
+## Bug Fix: App Freeze on Startup
+
+**Issue:** After initial refactor, app was freezing on startup with "Update or Download" prompt stuck.
+
+**Root Cause:** The `onRehydrateStorage` callback was calling an async function (`getTransactionsSecure()`) without proper await handling, causing the rehydration to block indefinitely.
+
+**Solution:** Removed async transaction loading from rehydrate callback. Transactions are now:
+1. Excluded from AsyncStorage persist layer (security fix maintained)
+2. Loaded from secure storage on-demand when user accesses finance tracker
+3. No longer blocking app startup
+
+**Result:** App now starts cleanly and responds immediately to QR code scans.
+
+---
+
 ## Conclusion
 
-The refactor successfully addressed the core issues: **security vulnerability fixed**, **dead code removed**, **test coverage improved**, and **repository cleaned**. The app is now in a healthier state for future development.
+The refactor successfully addressed the core issues: **security vulnerability fixed**, **dead code removed**, **test coverage improved**, **repository cleaned**, and **app freeze resolved**. The app is now in a healthier state for future development.
 
 All changes are backward-compatible with zero impact on user-facing functionality.

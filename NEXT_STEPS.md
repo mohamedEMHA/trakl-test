@@ -166,5 +166,24 @@ For issues or questions:
 
 ---
 
-**Status**: ✅ All fixes implemented and ready for testing
-**Last Updated**: 2025-07-11
+## Latest Fixes (July 12, 2026)
+
+### App Freeze Issue - RESOLVED ✅
+**Problem**: App was freezing on startup with "Update or Download" prompt stuck.
+**Cause**: Async transaction loading in `onRehydrateStorage` callback was blocking rehydration.
+**Fix**: Removed async operation from rehydrate callback. Transactions now load on-demand.
+**Status**: App now starts cleanly and responds immediately to QR code scans.
+
+### Dead Code Removed ✅
+- Deleted unused clean-architecture layer (~30 KB)
+- Removed repository interfaces, container, and usecases
+- All tests passing (29/29)
+
+### Security Fix ✅
+- Transactions no longer persisted in plaintext AsyncStorage
+- Encrypted secure storage is now the single source of truth for financial data
+
+---
+
+**Status**: ✅ All fixes implemented and tested - ready for deployment
+**Last Updated**: 2026-07-12

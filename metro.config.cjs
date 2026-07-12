@@ -65,6 +65,17 @@ config.transformer = {
 // Configure watcher to properly handle asset changes
 config.watchFolders = config.watchFolders || [];
 
+// Exclude @oxfmt native binding directories from Metro's file crawler/watcher.
+// These are platform-specific native binaries for the (dev-only) oxfmt formatter
+// and are never imported by the app. On OneDrive-synced folders their sibling
+// platform placeholders can appear in directory listings without being present
+// on disk, which crashes Metro's file watcher with ENOENT. Ignoring them here
+// keeps the watcher stable.
+const oxfmtIgnore = /[\\/]node_modules[\\/]@oxfmt[\\/]/;
+config.resolver.blockList = config.resolver.blockList
+  ? [].concat(config.resolver.blockList, oxfmtIgnore)
+  : oxfmtIgnore;
+
 // Add server configuration to handle proxy/forwarded headers
 config.server = {
   ...config.server,

@@ -7,7 +7,6 @@ import type { TrackerKey } from '@/src/domain/trackers';
 import {
   saveTransactionsSecure,
   deleteTransactionsSecure,
-  getTransactionsSecure,
 } from '@/src/infrastructure/storage/secureStorage';
 import { createBackup, parseBackup } from './backup';
 import type {
@@ -694,16 +693,9 @@ export const useTrakl = create<TraklState>()(
           useTrakl.setState({ hydrated: true, rehydrateFailed: true });
           return;
         }
-        if (state) {
-          state.hydrated = true;
-          // Load transactions from encrypted secure storage (non-blocking).
-          // This ensures transactions are never persisted in plaintext AsyncStorage.
-          void getTransactionsSecure().then((txs) => {
-            if (txs) {
-              useTrakl.setState({ transactions: txs });
-            }
-          });
-        }
+        // Mark hydration complete. This must be done via setState to ensure
+        // React components see the state change and re-render.
+        useTrakl.setState({ hydrated: true });
       },
     },
   ),
