@@ -1,0 +1,45 @@
+# Trivy configuration
+# https://trivy.dev/docs/latest/references/configuration/config-file/
+#
+# Local usage:  trivy fs . --config trivy.yaml
+# CI usage:     uses: aquasecurity/trivy-action@v0.36.0 with: trivy-config: trivy.yaml
+
+# --- Report options ---
+format: table
+exit-code: 0
+severity:
+  - CRITICAL
+  - HIGH
+  - MEDIUM
+
+# --- Scan options ---
+scan:
+  scanners:
+    - vuln
+    - secret
+    - misconfig
+  skip-dirs:
+    - node_modules/
+    - .expo/
+    - dist/
+    - android/
+    - ios/
+    - .git/
+    - .idea/
+    - __tests__/
+  skip-files:
+    - "@mopatch__trakl.bak.jks"
+    - "@mopatch__trakl.bak_OLD_1.jks"
+    - "@mopatch__trakl.jks"
+    - android-upload-key.p12
+  skip-version-check: true
+
+# --- Vulnerability options ---
+vulnerability:
+  ignore-unfixed: true
+
+# --- Misconfiguration options ---
+# Misconfiguration scanning is enabled via scan.scanners above.
+# Default scanners: azure-arm, cloudformation, dockerfile, helm,
+# kubernetes, terraform, terraformplan-json, terraformplan-snapshot
+# No additional misconfiguration options needed for this project.

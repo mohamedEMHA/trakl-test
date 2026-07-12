@@ -1,0 +1,66 @@
+name: Syft SBOM Generation
+
+# Generates a Software Bill of Materials (SBOM) for the repository
+# using Anchore Syft.
+#
+# Outputs SPDX-JSON and CycloneDX-JSON SBOMs as workflow artifacts.
+# Also uploads to GitHub Dependency Snapshot API when enabled.
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Monday at 02:00 UTC (offset from Trivy/Grype)
+    - cron: "0 2 * * 1"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: syft-sbom-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  syft-sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate SPDX-JSON SBOM
+        id: spdx
+        uses: anchore/sbom-action@v0
+        with:
+          path: "."
+          config: .syft.yaml
+          format: spdx-json
+          artifact-name: trakl-sbom.spdx.json
+          upload-artifact: true
+          upload-artifact-retention: 30
+          upload-release-assets: false
+          dependency-snapshot: true
+
+      - name: Generate CycloneDX-JSON SBOM
+        id: cyclonedx
+        uses: anchore/sbom-action@v0
+        with:
+          path: "."
+          config: .syft.yaml
+          format: cyclonedx-json
+          artifact-name: trakl-sbom.cdx.json
+          upload-artifact: true
+          upload-artifact-retention: 30
+          upload-release-assets: false
+          dependency-snapshot: false

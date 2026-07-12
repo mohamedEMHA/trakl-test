@@ -1,0 +1,51 @@
+rules:
+  - id: react-native-hardcoded-secrets
+    patterns:
+      - pattern: |
+          const $SECRET = "..."
+      - metavariable-regex:
+          metavariable: $SECRET
+          regex: (?i)(password|secret|api_key|apikey|token|private_key)
+    message: Hardcoded secret detected. Use environment variables or secure storage.
+    languages: [typescript, javascript]
+    severity: ERROR
+    paths:
+      include:
+        - "src/**"
+        - "lib/**"
+        - "app/**"
+        - "components/**"
+      exclude:
+        - "**/*.test.*"
+        - "**/*.spec.*"
+
+  - id: react-native-insecure-storage
+    patterns:
+      - pattern: AsyncStorage.setItem($KEY, $VALUE)
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: (?i)(password|secret|token|api_key|private)
+    message: Sensitive data should not be stored in AsyncStorage. Use expo-secure-store instead.
+    languages: [typescript, javascript]
+    severity: ERROR
+
+  - id: react-native-eval-injection
+    pattern: eval($EXPR)
+    message: Avoid eval() - it can lead to code injection attacks.
+    languages: [typescript, javascript]
+    severity: ERROR
+
+  - id: react-native-child-process
+    pattern: require('child_process')
+    message: Avoid child_process in React Native apps - potential security risk.
+    languages: [typescript, javascript]
+    severity: WARNING
+
+  - id: ts-non-null-assertion
+    pattern: $EXPR!
+    message: Non-null assertion used. Consider explicit null check for safety.
+    languages: [typescript]
+    severity: INFO
+    paths:
+      include:
+        - "src/**"

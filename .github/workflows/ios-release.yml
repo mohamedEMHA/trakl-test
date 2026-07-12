@@ -27,6 +27,9 @@ on:
       - ".github/**"
 
 # Avoid concurrent runs on the same branch; cancel in-progress on new push.
+permissions:
+  contents: read
+
 concurrency:
   group: ios-release-${{ github.ref }}
   cancel-in-progress: true
@@ -40,8 +43,9 @@ jobs:
     name: Build iOS Release
     runs-on: macos-latest
     timeout-minutes: 90
-    permissions:
-      contents: read
+    env:
+      BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
+      BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
 
     steps:
       - name: Checkout repository
@@ -66,8 +70,6 @@ jobs:
       - name: Generate iOS project (expo prebuild)
         env:
           BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
-          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
-          BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
           BILT_ANDROID_VERSION_CODE: "1"
           EXPO_PLATFORM: "native"
         run: npx expo prebuild --platform ios --clean --no-install
@@ -141,7 +143,7 @@ jobs:
 
       - name: Patch Xcode project for signing
         env:
-          BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
+          BUNDLE_ID: ${{ env.BILT_IOS_BUNDLE_ID }}
         working-directory: ios
         run: |
           set -e
@@ -175,8 +177,6 @@ jobs:
       - name: Build IPA (archive + export)
         env:
           BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
-          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
-          BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
           BILT_ANDROID_VERSION_CODE: "1"
         working-directory: ios
         run: |

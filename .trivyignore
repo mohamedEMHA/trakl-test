@@ -1,0 +1,7 @@
+# Trivy ignore file
+# https://trivy.dev/docs/latest/configuration/filtering/#by-cve-id
+#
+# List one CVE ID per line to suppress specific vulnerabilities.
+# Example:
+# CVE-2024-12345
+# CVE-2024-67890

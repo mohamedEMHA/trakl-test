@@ -1,0 +1,60 @@
+name: Hadolint Dockerfile Lint
+
+# Lints the Dockerfile for best practices and potential issues
+# using Hadolint.
+#
+# Results are uploaded to GitHub Security tab (SARIF).
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "Dockerfile"
+      - ".github/workflows/hadolint-lint.yml"
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - ".github/workflows/hadolint-lint.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: hadolint-lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hadolint:
+    name: Hadolint Dockerfile Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        id: hadolint
+        uses: hadolint/hadolint-action@v3.3.0
+        with:
+          dockerfile: Dockerfile
+          format: sarif
+          output-file: hadolint-results.sarif
+          no-fail: true
+
+      - name: Upload Hadolint results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: hadolint-results.sarif
+
+      - name: Upload Hadolint results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hadolint-sarif-results
+          path: hadolint-results.sarif
+          if-no-files-found: warn
+          retention-days: 30

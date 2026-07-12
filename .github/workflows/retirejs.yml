@@ -1,0 +1,34 @@
+name: RetireJS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  retirejs:
+    name: RetireJS Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install RetireJS
+        run: npm install -g retire
+
+      - name: Run RetireJS
+        run: retire --path . --outputformat json --outputpath retirejs-results.json --severity medium
+        continue-on-error: true
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retirejs-results
+          path: retirejs-results.json

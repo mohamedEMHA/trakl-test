@@ -33,6 +33,9 @@ on:
       - ".github/**"
 
 # Avoid concurrent runs on the same branch; cancel in-progress on new push.
+permissions:
+  contents: read
+
 concurrency:
   group: android-release-${{ github.ref }}
   cancel-in-progress: true
@@ -47,8 +50,9 @@ jobs:
     name: Build Android Release (${{ github.event.inputs.build_type || 'release-aab' }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    permissions:
-      contents: read
+    env:
+      BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
+      BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
 
     steps:
       - name: Checkout repository
@@ -70,10 +74,12 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          api-level: 35
-          build-tools-version: 35.0.0
-          ndk-version: 26.1.10909125
+
+      - name: Install Android SDK components
+        run: |
+          set -e
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "ndk;26.1.10909125"
+          sdkmanager --licenses
 
       - name: Resolve build inputs
         id: inputs
@@ -95,9 +101,7 @@ jobs:
       - name: Generate Android project (expo prebuild)
         env:
           BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
-          BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
           BILT_ANDROID_VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
-          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
         run: npx expo prebuild --platform android --clean --no-install
 
       - name: Increase Gradle JVM memory & disable lint
@@ -352,9 +356,7 @@ jobs:
         working-directory: android
         env:
           BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
-          BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
           BILT_ANDROID_VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
-          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
         run: ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Build Release APK (only when requested)
@@ -362,9 +364,7 @@ jobs:
         working-directory: android
         env:
           BILT_APP_VERSION: ${{ steps.inputs.outputs.version_name }}
-          BILT_ANDROID_PACKAGE: ${{ vars.BILT_ANDROID_PACKAGE || 'trakl.app' }}
           BILT_ANDROID_VERSION_CODE: ${{ steps.inputs.outputs.version_code }}
-          BILT_IOS_BUNDLE_ID: ${{ vars.BILT_IOS_BUNDLE_ID || 'tech.pimora.trakl' }}
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: List built artifacts

@@ -2,6 +2,7 @@
 import '../global.css';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Image, Platform, StyleSheet, View } from 'react-native';
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -10,7 +11,6 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { Platform } from 'react-native';
 import { useEffect, useState } from 'react';
 import * as DevClient from 'expo-dev-client';
 import { HeroUINativeProvider } from 'heroui-native';
@@ -56,6 +56,12 @@ export default function RootLayout() {
     Inter_700Bold,
     ...ClashDisplayFonts,
   });
+
+  // Hide the native splash IMMEDIATELY so our JS splash (orange + logo) is visible.
+  // Don't wait for fonts/i18n — those load behind the JS splash screen.
+  useEffect(() => {
+    void SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   useEffect(() => {
     void initI18n().then(() => setI18nReady(true));
@@ -138,14 +144,12 @@ export default function RootLayout() {
     }
   }, []);
 
-  useEffect(() => {
-    if ((loaded || error) && i18nReady) {
-      void SplashScreen.hideAsync();
-    }
-  }, [loaded, error, i18nReady]);
-
   if ((!loaded && !error) || !i18nReady) {
-    return null;
+    return (
+      <View style={splashStyles.container}>
+        <Image source={require('../assets/logo.png')} style={splashStyles.logo} resizeMode="contain" />
+      </View>
+    );
   }
 
   return (
@@ -204,3 +208,16 @@ function RootStack() {
     </Stack>
   );
 }
+
+const splashStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f0c061',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
+    width: 200,
+    height: 200,
+  },
+});

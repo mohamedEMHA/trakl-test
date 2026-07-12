@@ -1,0 +1,49 @@
+# Grype configuration
+# https://oss.anchore.com/docs/reference/grype/configuration/
+#
+# Local usage:  grype . --config .grype.yaml
+# CI usage:     uses: anchore/scan-action@v7 with: path: "."
+
+# --- Output options ---
+output: table
+only-fixed: false
+by-cve: true
+sort-by: severity
+
+# --- Fail severity ---
+# Empty = never fail the build. Set to "critical" to fail on CRITICAL findings.
+fail-on-severity: ""
+
+# --- Ignore rules ---
+# List specific vulnerabilities to ignore.
+ignore: []
+# Example:
+# ignore:
+#   - vulnerability: CVE-2024-12345
+#     package:
+#       name: postcss
+#       type: npm
+
+# --- Exclude paths from scanning ---
+# Patterns must start with './', '*/', or '**/'
+exclude:
+  - "./node_modules/**"
+  - "./.expo/**"
+  - "./dist/**"
+  - "./android/**"
+  - "./ios/**"
+  - "./.git/**"
+  - "./.idea/**"
+  - "./__tests__/**"
+  - "**/*.jks"
+  - "**/*.p12"
+  - "**/*.pem"
+  - "**/*.key"
+  - "./scripts/act.exe"
+  - "./scripts/*.exe"
+
+# --- DB options ---
+db:
+  auto-update: true
+  validate-age: true
+  max-allowed-built-age: 120h0m0s

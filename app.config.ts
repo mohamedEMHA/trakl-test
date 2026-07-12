@@ -87,15 +87,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'expo-splash-screen',
         {
           image: './assets/splash.png',
-          resizeMode: 'cover',
-          backgroundColor: '#ffffff',
+          resizeMode: 'contain',
+          backgroundColor: '#f0c061',
         },
       ],
       [
         'react-native-google-mobile-ads',
         {
           // TRAKL production AdMob App IDs (separate AdMob app per platform).
-          // These MUST match lib/admobConfig.ts (androidAppId / iosAppId).
+          // MUST match src/infrastructure/services/admobConfig.ts (androidAppId / iosAppId).
           // Google sample test App IDs for reference:
           //   android: ca-app-pub-3940256099942544~3347511713
           //   ios:     ca-app-pub-3940256099942544~1458002511

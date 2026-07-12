@@ -1,0 +1,70 @@
+name: Grype Security Scan
+
+# Scans the repository for vulnerabilities in npm dependencies
+# using Anchore Grype.
+#
+# Results are uploaded to GitHub Security tab (SARIF) and as an artifact.
+# The scan does NOT fail the build (fail-on-severity is empty in .grype.yaml).
+# To enable build failure on CRITICAL findings, set fail-on-severity: critical
+# in .grype.yaml or use the severity-cutoff input below.
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Monday at 01:00 UTC (offset from Trivy's 00:00)
+    - cron: "0 1 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: grype-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  grype-scan:
+    name: Grype Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Grype vulnerability scanner
+        id: scan
+        uses: anchore/scan-action@v7
+        with:
+          path: "."
+          config: .grype.yaml
+          output-format: sarif
+          output-file: grype-results.sarif
+          fail-build: false
+          severity-cutoff: critical
+          only-fixed: false
+          by-cve: true
+
+      - name: Upload Grype scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: grype-results.sarif
+
+      - name: Upload Grype results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: grype-sarif-results
+          path: grype-results.sarif
+          if-no-files-found: warn
+          retention-days: 30

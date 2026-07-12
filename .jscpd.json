@@ -1,0 +1,23 @@
+{
+  "threshold": 0,
+  "ignore": [
+    "**/node_modules/**",
+    "**/.expo/**",
+    "**/dist/**",
+    "**/android/**",
+    "**/ios/**",
+    "**/.git/**",
+    "**/__tests__/**",
+    "**/lib/locales/**",
+    "**/scripts/**",
+    "**/package-lock.json",
+    "**/*.json",
+    "**/*.md",
+    "**/*.yaml",
+    "**/*.yml",
+    "**/*.css"
+  ],
+  "min-lines": 8,
+  "min-tokens": 50,
+  "format": ["typescript", "tsx", "javascript"]
+}

@@ -1,0 +1,40 @@
+{
+  "entry": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "src/**/*.{ts,tsx}",
+    "i18n.d.ts"
+  ],
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "src/**/*.{ts,tsx}",
+    "__tests__/**/*.{ts,tsx}",
+    "scripts/**/*.{mjs,ts,js}"
+  ],
+  "ignore": [
+    "lib/locales/**",
+    "eslint-rules/**",
+    "assets/**",
+    "dist/**",
+    ".expo/**",
+    "android/**",
+    "ios/**"
+  ],
+  "ignoreBinaries": ["expo", "semgrep", "osv-scanner", "retire"],
+  "ignoreDependencies": [
+    "babel-preset-expo",
+    "eslint-plugin-expo",
+    "eslint-plugin-react-compiler",
+    "eslint-plugin-react-native",
+    "eslint-plugin-security",
+    "oxlint-tsgolint",
+    "react-native-web",
+    "react-dom",
+    "expo-system-ui"
+  ]
+}

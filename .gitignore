@@ -58,6 +58,7 @@ _project_metadata.jsonl
 .act-secrets.env
 
 # CI / act / npm log files
+act.exe
 act-*.log
 act-build*.log
 act-dryrun*.log

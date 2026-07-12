@@ -1,0 +1,69 @@
+name: Checkov IaC Scan
+
+# Scans GitHub Actions workflows and config files for misconfigurations
+# using Checkov (Bridgecrew).
+#
+# Checkov supports scanning GitHub Actions workflows, Dockerfiles,
+# Terraform, Kubernetes, CloudFormation, and more.
+# Results are uploaded to GitHub Security tab (SARIF).
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Monday at 04:00 UTC
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+concurrency:
+  group: checkov-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checkov:
+    name: Checkov IaC Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Checkov scan
+        id: checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: github_actions,dockerfile,secrets
+          soft_fail: true
+          output_format: cli,sarif
+          output_file_path: console,checkov-results.sarif
+          skip_check: CKV_GIT_1,CKV_SECRET_6,CKV_GHA_7
+          quiet: true
+
+      - name: Upload Checkov scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: checkov-results.sarif
+
+      - name: Upload Checkov results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: checkov-sarif-results
+          path: checkov-results.sarif
+          if-no-files-found: warn
+          retention-days: 30

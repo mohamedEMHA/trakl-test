@@ -1,0 +1,119 @@
+name: Code Quality
+
+# Runs code quality tools: Knip (dead code), jscpd (duplicate code),
+# and ast-grep (structural linting).
+#
+# Knip and jscpd results are uploaded as artifacts.
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Monday at 06:00 UTC
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: code-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  knip:
+    name: Knip (Dead Code)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Knip
+        run: npx knip --no-exit-code --reporter json > knip-results.json
+
+      - name: Upload Knip results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: knip-results
+          path: knip-results.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  jscpd:
+    name: jscpd (Duplicate Code)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run jscpd
+        run: npx jscpd --output ./jscpd-report --format json,html
+
+      - name: Upload jscpd results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jscpd-results
+          path: jscpd-report
+          if-no-files-found: warn
+          retention-days: 30
+
+  ast-grep:
+    name: ast-grep (Structural Lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ast-grep
+        run: npx ast-grep scan --json > ast-grep-results.json || true
+
+      - name: Upload ast-grep results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ast-grep-results
+          path: ast-grep-results.json
+          if-no-files-found: warn
+          retention-days: 30

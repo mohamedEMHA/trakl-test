@@ -1,0 +1,70 @@
+name: KICS Security Scan
+
+# Scans the repository for infrastructure misconfigurations
+# using KICS (Keeping Infrastructure as Code Secure).
+#
+# KICS supports Dockerfile, Kubernetes, Terraform, CloudFormation,
+# and GitHub Actions workflows.
+# Results are uploaded to GitHub Security tab (SARIF).
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Monday at 05:00 UTC
+    - cron: "0 5 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+concurrency:
+  group: kics-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kics:
+    name: KICS Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare results directory
+        run: mkdir -p kics-results
+
+      - name: Run KICS Scan
+        uses: checkmarx/kics-github-action@v2
+        with:
+          path: .
+          output_path: kics-results
+          output_formats: json,sarif
+          ignore_on_exit: results
+          exclude_paths: "node_modules,.expo,dist,android,ios,.git,__tests__"
+          fail_on: high,critical
+
+      - name: Upload KICS scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: kics-results/results.sarif
+
+      - name: Upload KICS results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kics-results
+          path: kics-results
+          if-no-files-found: warn
+          retention-days: 30

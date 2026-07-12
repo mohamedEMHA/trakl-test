@@ -7,9 +7,18 @@ module.exports = {
   },
   testMatch: ['**/__tests__/**/*.test.ts?(x)'],
   collectCoverageFrom: [
+    'src/**/*.ts',
     'lib/**/*.ts',
     'app/**/*.tsx',
     '!**/*.d.ts',
     '!**/node_modules/**',
   ],
+  coverageThreshold: {
+    global: {
+      branches: 30,
+      functions: 30,
+      lines: 30,
+      statements: 30,
+    },
+  },
 };

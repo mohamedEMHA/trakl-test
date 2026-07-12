@@ -1,0 +1,44 @@
+# Syft configuration
+# https://oss.anchore.com/docs/reference/syft/configuration/
+#
+# Local usage:  syft . --config .syft.yaml
+# CI usage:     uses: anchore/sbom-action@v0 with: config: .syft.yaml
+
+# --- Output options ---
+output:
+  - "spdx-json"
+format:
+  pretty: true
+
+# --- Package options ---
+package:
+  search-indexed-archives: true
+  search-unindexed-archives: false
+
+# --- Exclude paths from scanning ---
+# Glob patterns must start with './', '*/', or '**/'
+exclude:
+  - "./node_modules/**"
+  - "./.expo/**"
+  - "./dist/**"
+  - "./android/**"
+  - "./ios/**"
+  - "./.git/**"
+  - "./.idea/**"
+  - "./__tests__/**"
+  - "**/*.jks"
+  - "**/*.p12"
+  - "**/*.pem"
+  - "**/*.key"
+  - "./scripts/*.exe"
+
+# --- JavaScript options ---
+javascript:
+  include-dev-dependencies: false
+
+# --- Source options ---
+source:
+  base-path: "."
+
+# --- Check for updates ---
+check-for-app-update: false

@@ -1,0 +1,67 @@
+name: Trivy Security Scan
+
+# Scans the repository for:
+# - Vulnerabilities (CVE) in npm dependencies (package-lock.json)
+# - Secrets (API keys, tokens, etc.)
+# - Misconfigurations (IaC, Dockerfile, Kubernetes, etc.)
+#
+# Results are uploaded to GitHub Security tab (SARIF) and as an artifact.
+# The scan does NOT fail the build (exit-code: 0 in trivy.yaml).
+# To enable build failure on CRITICAL findings, set exit-code: 1 in trivy.yaml.
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Monday at 00:00 UTC to catch new CVEs
+    - cron: "0 0 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: trivy-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trivy-scan:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner in fs mode
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          trivy-config: trivy.yaml
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+
+      - name: Upload Trivy results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-sarif-results
+          path: trivy-results.sarif
+          if-no-files-found: warn
+          retention-days: 30
